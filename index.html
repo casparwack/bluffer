@@ -1,5 +1,22 @@
+<!doctype html>
+<html lang="en" class="standalone">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#040d0a">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bluffer">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Bet how many you can name. Then back it up. A new category every day.">
+<meta property="og:title" content="Bluffer">
+<meta property="og:description" content="Bet how many you can name. Then back it up.">
+<meta property="og:url" content="https://bluffer.lol">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/apple-touch-icon.png">
 <title>Bluffer</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <style>
@@ -15,7 +32,12 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
-body{margin:0;background:var(--wall);color:var(--chalk);font-family:var(--body);font-size:16px;overflow-x:hidden}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--wall);color:var(--chalk);font-family:var(--body);font-size:16px;overflow:hidden;position:fixed;inset:0;overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{touch-action:manipulation;-webkit-appearance:none;appearance:none}
+input{-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearance:none}
+.grid{-webkit-user-select:all;user-select:all}
 
 /* ---------- scene ---------- */
 .scene{position:fixed;inset:0;z-index:0;overflow:hidden;
@@ -40,7 +62,7 @@ body{margin:0;background:var(--wall);color:var(--chalk);font-family:var(--body);
 @keyframes pulse{50%{box-shadow:inset 0 0 120px rgba(255,60,50,.25)}}
 
 /* ---------- ui ---------- */
-.ui{position:relative;z-index:1;height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;
+.ui{position:relative;z-index:1;height:var(--app-h,100%);max-width:460px;margin:0 auto;display:flex;flex-direction:column;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 16px}
 .timer{position:fixed;left:0;right:0;top:0;height:3px;z-index:5;background:rgba(255,255,255,.05)}
 .timer i{display:block;height:100%;width:100%;background:var(--gold);box-shadow:0 0 14px var(--gold)}
@@ -49,11 +71,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .logo{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.2em;color:var(--gold);text-shadow:0 0 24px rgba(242,193,78,.35)}
 .logo span{color:var(--chalk)}
 .help{width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(244,239,227,.25);background:var(--glass);color:var(--chalk);font-weight:700;cursor:pointer}
-.title{text-align:center;margin-top:46px}
+.title{text-align:center;margin-top:46px;transition:margin .3s ease}
+.playing .title{margin-top:14px}
+.playing .title .eyebrow{display:none}
+.playing .cat{font-size:28px}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
 .cat{font-family:var(--display);font-weight:900;font-size:clamp(34px,10vw,46px);line-height:.95;letter-spacing:.03em;text-transform:uppercase;margin-top:4px;text-shadow:0 2px 24px rgba(0,0,0,.6);text-wrap:balance}
 
-.arena{position:relative;flex:1;min-height:200px}
+.arena{position:relative;flex:1;min-height:110px}
 .floor{position:absolute;left:0;right:0;bottom:46px;height:0}
 .shadow{position:absolute;left:50%;bottom:-16px;width:300px;height:32px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(rgba(0,0,0,.6),transparent 70%)}
 .stack{position:absolute;left:50%;bottom:0;width:170px;transform:translateX(-50%);display:flex;flex-direction:column-reverse}
@@ -121,8 +146,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .callrow{display:flex;align-items:center;gap:12px}
 .num{flex:1;text-align:center;font-family:var(--display);font-weight:900;font-size:76px;line-height:.85;font-variant-numeric:tabular-nums}
 .step{width:56px;height:56px;flex:none;border-radius:50%;border:1.5px solid rgba(244,239,227,.25);background:rgba(255,255,255,.04);color:var(--chalk);font-size:28px;line-height:1;cursor:pointer;transition:background .15s,border-color .15s}
-.step:hover{background:rgba(255,255,255,.09);border-color:var(--gold)}
-input[type=range]{width:100%;margin:0;accent-color:var(--gold)}
+@media (hover:hover){.step:hover{background:rgba(255,255,255,.09);border-color:var(--gold)}}
+.step:active{background:rgba(255,255,255,.12);border-color:var(--gold);transform:scale(.94)}
+input[type=range]{width:100%;height:32px;margin:0;background:transparent;cursor:pointer;touch-action:pan-y}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--gold) var(--p,15%),rgba(244,239,227,.15) var(--p,15%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-12px;border-radius:50%;background:radial-gradient(circle,#ffe39a 0 5px,var(--gold) 6px 9px,#fff3cf 10px 11px,var(--gold) 12px);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:rgba(244,239,227,.15)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:4px;background:var(--gold)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.5)}
 .stakes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stake{border:1px solid rgba(244,239,227,.12);border-radius:12px;padding:8px 12px}
 .stake strong{display:block;font-family:var(--display);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
@@ -200,8 +231,19 @@ input[type=range]{width:100%;margin:0;accent-color:var(--gold)}
 .moral{margin:10px 0 0;font-size:13.5px;line-height:1.5;color:var(--dim)}
 .moral b{color:var(--chalk);font-weight:600}
 button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+/* standalone site: handle notch + home bar ourselves (preview adds this for us) */
+.standalone .ui{padding-top:max(14px,env(safe-area-inset-top,0px));padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.standalone .timer{top:env(safe-area-inset-top,0px)}
+.standalone .intro-in{padding-top:max(34px,calc(env(safe-area-inset-top,0px) + 16px));padding-bottom:max(28px,calc(env(safe-area-inset-bottom,0px) + 12px))}
+.kb .title{display:none}
+@media (max-height:520px){.playing .title{display:none}.playing .ui{padding-bottom:8px}}
+.kb .ui{padding-bottom:8px}
+@media (max-height:720px){.title{margin-top:22px}.cat{font-size:34px}.num{font-size:62px}.step{width:50px;height:50px}.panel{padding:14px;gap:10px}.stake{padding:6px 10px}.btn{padding:14px}.i-head h2{font-size:38px}}
+@media (max-height:620px){.title{margin-top:10px}.cat{font-size:28px}.stakes{display:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
+</head>
+<body>
 
 <div class="scene" id="scene"><div class="cone"></div><div class="lamp"><i></i><b></b></div></div>
 <div class="timer" id="timer" hidden><i id="timerFill"></i></div>
@@ -242,7 +284,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--gol
   <!-- PLAY -->
   <section class="panel" id="playScreen" hidden>
     <div class="entry">
-      <input id="guess" type="text" placeholder="Name a beer brand" aria-label="Your answer" enterkeyhint="send" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input id="guess" type="text" inputmode="text" placeholder="Name a beer brand" aria-label="Your answer" enterkeyhint="send" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
       <button type="button" class="add" id="addBtn">ADD</button>
     </div>
     <div class="fb" id="fb">20 seconds per answer. Resets each time you land one.</div>
@@ -320,8 +362,8 @@ for(let i=0;i<18;i++){const m=document.createElement("div");m.className="mote";
 // ---------- STACK ----------
 const arena=document.querySelector(".arena"), stackEl=$("stack"), coinsEl=$("coins"), ghostEl=$("ghost");
 let call=10, named=[], seen=new Set(), mode="call";
-function room(){return Math.max(120,arena.clientHeight-80);}
-function layout(){const t=Math.max(3,Math.min(16,Math.floor(room()/Math.max(call,1))-1));
+function room(){return Math.max(40,arena.clientHeight-95);} // leave space for the bill face + counter
+function layout(){const t=Math.max(2,Math.min(16,Math.floor(room()/Math.max(call,1))-1));
   document.documentElement.style.setProperty("--t",t+"px");ghostEl.style.height=(call*(t+1))+"px";
   const extras=coinsEl.children.length;const cg=extras*7>room()?-(10-Math.max(2,room()/extras)):-3;
   document.documentElement.style.setProperty("--cg",cg+"px");}
@@ -347,7 +389,7 @@ function clearStack(){stackEl.innerHTML="";coinsEl.innerHTML="";}
 
 // ---------- CALL ----------
 $("callRange").max=CATEGORY.max;
-function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));$("callNum").textContent=call;$("callRange").value=call;
+function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));$("callNum").textContent=call;$("callRange").value=call;$("callRange").style.setProperty("--p",((call-1)/(CATEGORY.max-1)*100)+"%");
   $("ghostLbl").textContent="BET "+call;
   $("winPts").textContent=sign(score(call,call).total);
   $("losePts").textContent=sign(-STAKE);
@@ -370,7 +412,7 @@ if(!store.get("bluffer-seen"))openIntro();
 // ---------- PLAY ----------
 let deadline=0,raf=0;
 function reset(){named=[];seen.clear();clearStack();$("list").innerHTML="";$("stamp").className="stamp";ghostEl.classList.remove("hit");}
-function start(){mode="play";reset();
+function start(){mode="play";reset();document.body.classList.add("playing");
   $("need").textContent=call;$("got").textContent=0;$("count").hidden=false;$("timer").hidden=false;
   layout();show("playScreen");$("fb").className="fb";$("fb").textContent="20 seconds per answer. Resets each time you land one.";
   $("guess").value="";$("guess").focus();arm();}
@@ -399,7 +441,7 @@ $("doneBtn").onclick=()=>end("done");
 
 // ---------- RESULT ----------
 let last=null;
-function end(why){mode="end";cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
+function end(why){mode="end";document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
   const got=named.length,s=score(call,got);last={got,s};const st=$("stamp");
   if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();$("verdict").textContent=got>call?"Undersold it":"Called it";}
   else{st.textContent="BUSTED";st.className="stamp on";$("verdict").textContent=why==="time"?"Time's up":"Busted";
@@ -429,6 +471,7 @@ function shareText(c,g,s){
   const pts=(s.total>=0?"+":"−")+Math.abs(s.total).toLocaleString("en-NZ");
   return `Bluffer #${issue()} · ${CATEGORY.name} ${CATEGORY.emoji}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} ${pts}\nbluffer.lol`;}
 $("shareBtn").onclick=async()=>{const {got,s}=last;const txt=shareText(call,got,s);
+  if(navigator.share&&matchMedia("(pointer:coarse)").matches){try{await navigator.share({text:txt});return;}catch(e){if(e&&e.name==="AbortError")return;}}
   try{await navigator.clipboard.writeText(txt);$("shareBtn").textContent="COPIED";}
   catch{const r=document.createRange();r.selectNodeContents($("grid"));const sel=getSelection();sel.removeAllRanges();sel.addRange(r);$("shareBtn").textContent="SELECTED, COPY IT";}
   setTimeout(()=>$("shareBtn").textContent="SHARE",1800);};
@@ -436,6 +479,16 @@ $("againBtn").onclick=()=>{mode="call";reset();setCall(call);show("callScreen");
 function show(id){["callScreen","playScreen","resultScreen"].forEach(s=>$(s).hidden=s!==id);requestAnimationFrame(layout);}
 $("startBtn").onclick=start;
 addEventListener("resize",layout);
+// iPhone keyboard: size the app to the visible area so the input never hides behind the keyboard
+const vv=window.visualViewport;
+function fitViewport(){const h=vv?vv.height:innerHeight;document.documentElement.style.setProperty("--app-h",h+"px");
+  document.body.classList.toggle("kb",!!vv&&innerHeight-h>150);window.scrollTo(0,0);layout();}
+if(vv){vv.addEventListener("resize",fitViewport);vv.addEventListener("scroll",()=>window.scrollTo(0,0));}
+fitViewport();
+if(window.ResizeObserver)new ResizeObserver(()=>layout()).observe(arena);
 setCall(10);
 $("day").textContent="No. "+issue()+" · "+new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
 </script>
+
+</body>
+</html>
