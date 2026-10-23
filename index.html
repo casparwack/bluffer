@@ -17,7 +17,13 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-<meta property="og:image" content="https://bluffer.lol/icon-512.png">
+<meta property="og:image" content="https://bluffer.lol/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bluffer.lol/og.png">
+<script defer src="/_vercel/insights/script.js"></script>
 <title>Bluffer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;800;900&family=Instrument+Sans:wght@400;500;600;700&display=swap">
@@ -210,6 +216,14 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radiu
 .cs-pts{font-family:var(--display);font-weight:900;font-size:34px;line-height:.9;color:var(--gold);font-variant-numeric:tabular-nums}
 .cs-pts.neg,.cs-verdict.neg{color:var(--red)}
 .cs-link{position:relative;z-index:1;display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--gold);text-decoration:none;letter-spacing:.04em}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 0 2px;border-top:1px solid rgba(244,239,227,.08)}
+.stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat b{font-family:var(--display);font-weight:900;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.stat small{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.missed{display:flex;flex-direction:column;gap:8px}
+.missed .list{max-height:none}
+.missed .tag{background:rgba(244,239,227,.06);color:var(--chalk)}
+.report{align-self:center;font-size:12.5px;color:var(--dim);text-decoration:underline;text-underline-offset:3px}
 .res-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .linkbtn{border:0;background:none;color:var(--dim);font:600 13px var(--body);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0}
 .next b{color:var(--chalk);font-variant-numeric:tabular-nums;font-weight:600}
@@ -343,7 +357,15 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--gol
     </div>
     <ul class="rows" id="rows"></ul>
     <div class="btns"><button class="btn" id="shareBtn">SHARE</button><button class="btn sec" id="copyBtn">COPY</button></div>
-    <div class="res-bottom"><span class="next">Next category in <b id="nextIn">--:--:--</b></span><button class="linkbtn" id="againBtn">Replay</button></div>
+    <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button></div>
+    <div class="stats" id="stats">
+      <div class="stat"><b id="stPlayed">0</b><small>Played</small></div>
+      <div class="stat"><b id="stWin">0%</b><small>Backed up</small></div>
+      <div class="stat"><b id="stStreak">0</b><small>Streak</small></div>
+      <div class="stat"><b id="stBest">0</b><small>Best</small></div>
+    </div>
+    <div class="missed" id="missedBox"><div class="eyebrow">Some you missed</div><div class="list" id="missed"></div></div>
+    <a class="report" id="reportLink" href="#" target="_blank" rel="noopener">Missing an answer? Report it</a>
   </section>
 </div>
 
@@ -440,7 +462,8 @@ for(let i=0;i<18;i++){const m=document.createElement("div");m.className="mote";
 
 // ---------- STACK ----------
 const arena=document.querySelector(".arena"), stackEl=$("stack"), coinsEl=$("coins"), ghostEl=$("ghost");
-let call=10, named=[], seen=new Set(), mode="call";
+let call=10, named=[], seen=new Set(), mode="call", rejected=[];
+const REPORT_EMAIL="casparwack@gmail.com"; // where "report a missing answer" emails go
 function room(){return Math.max(40,arena.clientHeight-95);} // leave space for the bill face + counter
 function layout(){const t=Math.max(2,Math.min(16,Math.floor(room()/Math.max(call,1))-1));
   document.documentElement.style.setProperty("--t",t+"px");ghostEl.style.height=(call*(t+1))+"px";
@@ -490,7 +513,7 @@ if(!store.get("bluffer-seen"))openIntro();
 
 // ---------- PLAY ----------
 let deadline=0,raf=0;
-function reset(){named=[];seen.clear();clearStack();$("list").innerHTML="";$("stamp").className="stamp";ghostEl.classList.remove("hit");}
+function reset(){rejected=[];named=[];seen.clear();clearStack();$("list").innerHTML="";$("stamp").className="stamp";ghostEl.classList.remove("hit");}
 function start(){document.body.classList.remove("results");mode="play";reset();runToken++;checking=false;Sound.unlock();document.body.classList.add("playing");
   $("need").textContent=call;$("got").textContent=0;$("count").hidden=false;$("timer").hidden=false;
   layout();show("playScreen");$("fb").className="fb";$("fb").textContent="20 seconds per answer. Resets each time you land one.";
@@ -523,7 +546,7 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   let m=match(v);$("guess").value="";
   if(!m&&CATEGORY.check){checking=true;const f=$("fb");f.className="fb";f.textContent=`Checking “${v}”…`;
     const tok=runToken;m=await checkOnline(v);checking=false;if(mode!=="play"||tok!==runToken)return;}
-  if(!m)return nope(`"${v}" isn't on the list`);
+  if(!m){if(!rejected.includes(v))rejected.push(v);return nope(`"${v}" isn't on the list`);}
   if(seen.has(m.id))return nope("Already got that one");
   seen.add(m.id);named.push(m.label);const n=named.length;
   if(n>call)addCoin();else addBundle();layout();$("got").textContent=n;
@@ -539,9 +562,11 @@ $("doneBtn").onclick=()=>end("done");
 
 // ---------- RESULT ----------
 let last=null;
-function end(why){mode="end";document.body.classList.add("results");document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
+function end(why,restore){mode="end";document.body.classList.add("results");document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
   const got=named.length,s=score(call,got);last={got,s};const st=$("stamp");
-  if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();setTimeout(()=>Sound.stamp(),120);setTimeout(()=>Sound.win(),260);$("verdict").textContent=got>call?"Undersold it":"Called it";}
+  if(restore){st.textContent=s.hit?(got>call?"BANKED":"CALLED"):"BUSTED";st.className="stamp on"+(s.hit?" gold":"");
+    $("verdict").textContent=s.hit?(got>call?"Undersold it":"Called it"):(why==="time"?"Time's up":"Busted");}
+  else if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();setTimeout(()=>Sound.stamp(),120);setTimeout(()=>Sound.win(),260);$("verdict").textContent=got>call?"Undersold it":"Called it";}
   else{st.textContent="BUSTED";st.className="stamp on";$("verdict").textContent=why==="time"?"Time's up":"Busted";
     st.className="stamp";
     // missing answers stack up as red IOUs, then the whole pile gets swept
@@ -555,10 +580,34 @@ function end(why){mode="end";document.body.classList.add("results");document.bod
   $("csBet").innerHTML=`Bet ${call} <span>→</span> named ${got}`;
   $("csGrid").innerHTML=grid(call,got).split("\n").map(r=>`<div>${r}</div>`).join("");
   const r=s.hit?[[`Backed up ${call} × 150`,s.base,"pos"]]:[];
-  if(s.extra)r.push([`${got-call} coins × 25`,s.extra,"pos"]);
+  if(s.extra)r.push([`${got-call} coin${got-call>1?"s":""} × 25`,s.extra,"pos"]);
   if(s.short)r.push([`${call-got} short × 150`,-s.short,"neg"]);
   $("rows").innerHTML=r.map(([a,b,c])=>`<li><span>${a}</span><span class="${c}">${sign(b)}</span></li>`).join("");
+  if(!restore&&!testDay){store.set(dayKey(),JSON.stringify({call,named,why,rejected}));recordStats(s);}
+  renderStats();renderMissed();renderReport();
+  $("againBtn").hidden=!testDay;
   show("resultScreen");}
+
+// ---------- DAILY LOCK + STATS ----------
+const dayKey=()=>"bluffer-day-"+issue();
+function getStats(){try{return JSON.parse(store.get("bluffer-stats"))||null}catch(e){return null}}
+function recordStats(s){const st=getStats()||{played:0,wins:0,streak:0,maxStreak:0,best:null,lastDay:0,lastWinDay:0};const d=issue();
+  if(st.lastDay===d)return;st.played++;st.lastDay=d;
+  if(s.hit){st.wins++;st.streak=st.lastWinDay===d-1?st.streak+1:1;st.lastWinDay=d;st.maxStreak=Math.max(st.maxStreak,st.streak);}else st.streak=0;
+  st.best=st.best===null?s.total:Math.max(st.best,s.total);store.set("bluffer-stats",JSON.stringify(st));}
+function renderStats(){const st=getStats();$("stats").hidden=!st||testDay;if(!st)return;
+  const streak=st.lastWinDay>=issue()-1?st.streak:0;
+  $("stPlayed").textContent=st.played;$("stWin").textContent=Math.round(st.wins/st.played*100)+"%";
+  $("stStreak").textContent=streak+(streak>=3?"🔥":"");$("stBest").textContent=st.best===null?"–":fmt(st.best);}
+// a handful of well-known answers the player didn't get
+function renderMissed(){const pool=[];for(const line of CATEGORY.answers.slice(0,60)){const p=line.split("|")[0];if(!seen.has(norm(p)))pool.push(p);}
+  let seed=issue()*9301+49297;const rand=()=>(seed=(seed*9301+49297)%233280)/233280; // same picks all day
+  for(let i=pool.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}const out=pool.slice(0,8);
+  $("missedBox").hidden=!out.length;$("missed").innerHTML=out.map(x=>`<span class="tag">${x.replace(/</g,"&lt;")}</span>`).join("");}
+function renderReport(){const a=$("reportLink"),list=rejected.slice(0,20);
+  a.textContent=list.length?`Got a real answer rejected? Report it (${list.length})`:"Missing an answer? Report it";
+  const body=`Topic: ${CATEGORY.name} (#${issue()})\n\nThese should count:\n${list.length?list.map(x=>"- "+x).join("\n"):"- "}\n`;
+  a.href=`mailto:${REPORT_EMAIL}?subject=${encodeURIComponent("Bluffer missing answer: "+CATEGORY.name)}&body=${encodeURIComponent(body)}`;}
 // puzzle number counts days since launch
 // cash rows of 10, misses in red, coins on their own line
 function grid(c,g){const rows=[];let line="";
@@ -591,6 +640,9 @@ if(vv){vv.addEventListener("resize",fitViewport);vv.addEventListener("scroll",()
 fitViewport();
 if(window.ResizeObserver)new ResizeObserver(()=>layout()).observe(arena);
 setCall(10);
+(function restoreToday(){if(testDay)return;let rec=null;try{rec=JSON.parse(store.get(dayKey()))}catch(e){}
+  if(!rec||!rec.named)return;setCall(rec.call);named=rec.named;rejected=rec.rejected||[];seen=new Set(named.map(norm));
+  document.body.classList.add("results");$("intro").hidden=true;end(rec.why,true);})();
 function tickNext(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let t=Math.max(0,Math.floor((m-n)/1000));
   const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),se=t%60;$("nextIn").textContent=[h,mi,se].map(x=>String(x).padStart(2,"0")).join(":");}
 tickNext();setInterval(tickNext,1000);
