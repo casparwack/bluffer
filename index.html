@@ -152,7 +152,16 @@ header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height
 
 /* ---------- controls ---------- */
 .panel{display:flex;flex-direction:column;gap:14px;padding-top:6px}
-.ask{text-align:center;font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.2}
+.ask{display:flex;align-items:center;justify-content:center;gap:10px;text-align:center;font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.2}
+.betclock{font-family:var(--sans);font-style:normal;font-weight:700;font-size:12px;padding:4px 9px;border-radius:99px;background:var(--ink);color:var(--paper);font-variant-numeric:tabular-nums}
+.betclock.low{background:var(--red)}
+.reveal-copy{margin:0 0 4px;text-align:center;font-family:var(--serif);font-style:italic;font-size:18px;line-height:1.35;color:var(--ink-2);text-wrap:balance}
+.reveal-copy b{font-family:var(--sans);font-style:normal;font-weight:700;font-size:15px;color:var(--ink)}
+/* topic hidden: redaction bars instead of the name */
+.cat .redact{display:inline-block;height:.72em;border-radius:3px;background:var(--ink);vertical-align:baseline;margin:0 .06em}
+.hidden-topic .hint,.hidden-topic .ghost{visibility:hidden}
+.cat.revealed{animation:revealIn .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes revealIn{from{opacity:0;transform:scale(.85);filter:blur(6px)}}
 /* counter: an ink capsule with the number on a paper insert */
 .callrow{display:grid;grid-template-columns:64px 1fr 64px;align-items:stretch;height:74px;padding:5px;border-radius:99px;background:var(--ink)}
 .step{border:0;background:none;color:var(--paper);font-size:26px;font-weight:400;line-height:1;cursor:pointer;border-radius:99px;transition:background .15s}
@@ -175,9 +184,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .stake.l strong{color:var(--red)}
 .btn{width:100%;height:58px;border:0;border-radius:99px;background:var(--ink);color:var(--paper);cursor:pointer;
   font-family:var(--wide);font-stretch:125%;font-weight:800;font-size:15px;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .12s var(--ease)}
-#startBtn::after,#closeHelp::after{content:"→";font-stretch:100%;font-weight:400;font-size:18px}
+#startBtn::after,#closeHelp::after,#revealBtn::after{content:"→";font-stretch:100%;font-weight:400;font-size:18px}
 .btn:active{transform:scale(.98)}
 .btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+#doneBtn{width:auto;height:40px;align-self:center;margin-top:6px;padding:0 18px;font-family:var(--sans);font-stretch:105%;font-weight:600;font-size:12.5px;letter-spacing:.02em;box-shadow:inset 0 0 0 1px var(--ink-3);color:var(--ink-2)}
+#doneBtn.armed{background:var(--red);color:var(--paper);box-shadow:none;animation:nudge .35s}
+@keyframes nudge{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .entry{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:6px}
 #guess{flex:1;min-width:0;height:52px;padding:0;border:0;background:transparent;color:var(--ink);font:700 22px var(--sans);font-stretch:110%;letter-spacing:-.01em;outline:none}
 #guess::placeholder{color:var(--ink-3);font-weight:500}
@@ -318,8 +330,13 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
   </div>
 
   <!-- CALL -->
-  <section class="panel" id="callScreen">
-    <div class="ask">How many can you name?</div>
+  <section class="panel" id="revealScreen">
+    <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>30 seconds to place your bet</b>, then the clock starts.</p>
+    <button class="btn" id="revealBtn">REVEAL TOPIC</button>
+  </section>
+
+  <section class="panel" id="callScreen" hidden>
+    <div class="ask">How many can you name? <span class="betclock" id="betClock">30s</span></div>
     <div class="callrow">
       <button class="step" id="minus" aria-label="Lower call">−</button>
       <div class="num" id="callNum">10</div>
@@ -341,7 +358,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
     <div class="fb" id="fb">20 seconds per answer. Resets each time you land one.</div>
     <div class="list" id="list"></div>
-    <button class="btn sec" id="doneBtn">Cash out</button>
+    <button class="btn sec" id="doneBtn">I'm done · end round</button>
   </section>
 
   <!-- RESULT -->
@@ -373,7 +390,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     <div class="i-head"><div class="eyebrow">How to play</div><h2 id="introTitle">Bet big.<br><span>Back it up.</span></h2></div>
 
     <ol class="steps">
-      <li><span class="n">1</span><div><b>Place your bet</b><p>You get one category a day. Bet how many you think you can name.</p></div></li>
+      <li><span class="n">1</span><div><b>Reveal and bet</b><p>One topic a day, hidden until you tap reveal. Then you get <strong>30 seconds</strong> to bet how many you can name.</p></div></li>
       <li><span class="n">2</span><div><b>Name them</b><p><strong>20 seconds per answer.</strong> The clock resets every time you land one. Wrong guesses don't reset it, so don't panic-type.</p></div></li>
       <li><span class="n">3</span><div><b>Cash out</b><p>Every answer drops a bundle of cash on the table. Reach your bet line and you bank it. Fall short and you're busted.</p></div></li>
     </ol>
@@ -448,25 +465,53 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 
 // ---------- SOUND ----------
 // Every sound is generated in code with the Web Audio API, so there are no audio files to host.
-const Sound=(()=>{let ctx=null,on=true;try{on=localStorage.getItem("bluffer-sound")!=="0"}catch(e){}
-  const ac=()=>{if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ctx&&ctx.state==="suspended")ctx.resume();return ctx;};
-  function noise(dur,freq,vol,t0=0){const c=ac();if(!c||!on)return;const t=c.currentTime+t0;
-    const b=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);
-    const src=c.createBufferSource();src.buffer=b;const f=c.createBiquadFilter();f.type="lowpass";f.frequency.value=freq;const g=c.createGain();g.gain.value=vol;
-    src.connect(f).connect(g).connect(c.destination);src.start(t);}
-  function tone(freq,dur,vol,type="sine",t0=0,glide){const c=ac();if(!c||!on)return;const t=c.currentTime+t0;const o=c.createOscillator(),g=c.createGain();
-    o.type=type;o.frequency.setValueAtTime(freq,t);if(glide)o.frequency.exponentialRampToValueAtTime(glide,t+dur);
-    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.05);}
+const Sound=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=true;try{on=localStorage.getItem("bluffer-sound")!=="0"}catch(e){}
+  // one master bus: gentle compressor + a short room echo so every sound sits together
+  function ac(){if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)();
+      const comp=ctx.createDynamicsCompressor();comp.threshold.value=-16;comp.knee.value=14;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.18;
+      master=ctx.createGain();master.gain.value=.85;master.connect(comp);comp.connect(ctx.destination);
+      const len=Math.floor(ctx.sampleRate*.8),ir=ctx.createBuffer(2,len,ctx.sampleRate);
+      for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.4);}
+      verb=ctx.createConvolver();verb.buffer=ir;const vg=ctx.createGain();vg.gain.value=.22;verb.connect(vg);vg.connect(master);
+      nbuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);const nd=nbuf.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+    }catch(e){ctx=null}}if(ctx&&ctx.state==="suspended")ctx.resume();return ctx;}
+  function send(node,wet){node.connect(master);if(wet){const g=ctx.createGain();g.gain.value=wet;node.connect(g);g.connect(verb);}}
+  function noise({t=0,dur=.1,type="bandpass",f=1000,fEnd,q=1,vol=.5,attack=.002,wet=.15}){const c=ac();if(!c||!on)return;const t0=c.currentTime+t;
+    const s=c.createBufferSource();s.buffer=nbuf;const fl=c.createBiquadFilter();fl.type=type;fl.frequency.setValueAtTime(f,t0);if(fEnd)fl.frequency.exponentialRampToValueAtTime(fEnd,t0+dur);fl.Q.value=q;
+    const g=c.createGain();g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+attack);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);
+    s.connect(fl);fl.connect(g);send(g,wet);s.start(t0,Math.random()*.4);s.stop(t0+dur+.05);}
+  function tone({t=0,f=440,fEnd,dur=.3,type="sine",vol=.2,attack=.004,wet=.2}){const c=ac();if(!c||!on)return;const t0=c.currentTime+t;
+    const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t0);if(fEnd)o.frequency.exponentialRampToValueAtTime(fEnd,t0+dur);
+    g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+attack);g.gain.exponentialRampToValueAtTime(.0001,t0+dur);o.connect(g);send(g,wet);o.start(t0);o.stop(t0+dur+.05);}
+  // a bell = a few slightly-off harmonics that fade at different speeds
+  function bell(f,t=0,vol=.1,dur=1.2){[1,2.005,3.01,4.17].forEach((m,i)=>tone({t,f:f*m,dur:dur/(1+i*.7),vol:vol/(1+i*1.5),wet:.35}));}
+  // pentatonic scale, so the rising note on each answer always sounds good
+  const PENT=[0,2,4,7,9],note=i=>523.25*Math.pow(2,(PENT[i%5]+12*Math.floor(i/5))/12);
   return{get on(){return on},unlock:ac,
     toggle(){on=!on;try{localStorage.setItem("bluffer-sound",on?"1":"0")}catch(e){}if(on)ac();return on},
-    thud(){noise(.16,700,.9);tone(95,.14,.35,"sine",0,50)},                         // cash bundle lands
-    coin(){tone(2637,.25,.10);tone(3951,.18,.06);tone(2637,.15,.05,"sine",.16)},      // coin clink + bounce
-    no(){tone(180,.16,.10,"triangle",0,120)},                                        // wrong answer
-    win(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,.5,.07,"sine",i*.07))}, // bet covered
-    bust(){noise(.5,400,.6);tone(220,.6,.12,"sawtooth",0,55)},                      // busted
-    stamp(){noise(.12,1800,.8);tone(70,.2,.4,"sine",0,40)},                          // stamp slam
-    tick(){tone(1800,.03,.04,"square")},                                             // last seconds
-    click(){tone(900,.025,.03,"square")}};                                           // buttons
+    // cash bundle lands: paper slap + weighty thump + a note that climbs with every answer
+    thud(n=0){const up=Math.min(n,24)*.02;
+      noise({dur:.045,type:"highpass",f:3000,vol:.32,wet:.05});
+      noise({dur:.16,type:"bandpass",f:850*(1+up),q:.9,vol:.5,wet:.12});
+      tone({f:150*(1+up),fEnd:46,dur:.24,vol:.6,wet:.04});
+      bell(note(Math.min(n,14)),.04,.075,.7);},
+    // coin: metallic partials, then two smaller bounces
+    coin(){[0,.11,.19].forEach((t,k)=>{const b=2600*(1+Math.random()*.04);[1,1.62,2.31,3.17].forEach((m,i)=>tone({t,f:b*m,dur:(.4-k*.1)/(1+i*.5),vol:(.085-k*.024)/(1+i),wet:.3}));});},
+    // wrong answer: soft two-step "bonk" downwards
+    no(){tone({f:220,fEnd:180,dur:.11,type:"triangle",vol:.2,wet:.08});tone({t:.09,f:165,fEnd:130,dur:.2,type:"triangle",vol:.18,wet:.08});},
+    // bet backed up: bright chord of bells with a sparkle on top
+    win(){noise({dur:.05,type:"highpass",f:4000,vol:.22,wet:.2});[1046.5,1318.5,1568,2093].forEach((f,i)=>bell(f,.04+i*.075,.075,1.6));bell(3136,.36,.04,1.2);},
+    // cash register "ka-ching": drawer clack + bell
+    register(){noise({dur:.05,type:"bandpass",f:1900,q:2.5,vol:.5,wet:.06});noise({t:.06,dur:.08,type:"bandpass",f:950,q:1.6,vol:.4,wet:.06});
+      tone({t:.05,f:120,fEnd:60,dur:.16,vol:.4,wet:.04});bell(2637,.15,.12,1.8);bell(3520,.19,.09,1.6);},
+    // busted: deflating double slide + rumble
+    bust(){tone({f:330,fEnd:98,dur:.75,type:"sawtooth",vol:.06,wet:.2});tone({t:.04,f:311,fEnd:92,dur:.75,type:"sawtooth",vol:.05,wet:.2});noise({t:.25,dur:.55,type:"lowpass",f:700,fEnd:110,vol:.35,wet:.25});},
+    // rubber stamp slam
+    stamp(){tone({f:95,fEnd:36,dur:.26,vol:.75,wet:.12});noise({dur:.07,type:"highpass",f:1600,vol:.45,wet:.15});noise({dur:.14,type:"lowpass",f:420,vol:.5,wet:.15});},
+    // last seconds: wooden clock tick
+    tick(){noise({dur:.035,type:"bandpass",f:3400,q:4,vol:.32,wet:.04});tone({f:1250,dur:.045,vol:.04,wet:0});},
+    // buttons
+    click(){noise({dur:.022,type:"bandpass",f:2600,q:2.2,vol:.2,wet:0});}};
 })();
 function syncSound(){$("waves").hidden=!Sound.on;$("mute").hidden=Sound.on;$("soundBtn").setAttribute("aria-pressed",Sound.on);$("soundBtn").setAttribute("aria-label",Sound.on?"Sound on":"Sound off");}
 $("soundBtn").onclick=()=>{Sound.toggle();syncSound();};syncSound();
@@ -479,7 +524,7 @@ for(let i=0;i<18;i++){const m=document.createElement("div");m.className="mote";
 
 // ---------- STACK ----------
 const arena=document.querySelector(".arena"), stackEl=$("stack"), coinsEl=$("coins"), ghostEl=$("ghost");
-let call=10, named=[], seen=new Set(), mode="call", rejected=[];
+let call=10, named=[], seen=new Set(), mode="reveal", rejected=[];
 const REPORT_EMAIL="casparwack@gmail.com"; // where "report a missing answer" emails go
 function room(){return Math.max(40,arena.clientHeight-95);} // leave space for the bill face + counter
 function layout(){const t=Math.max(2,Math.min(16,Math.floor(room()/Math.max(call,1))-1));
@@ -490,7 +535,7 @@ function layout(){const t=Math.max(2,Math.min(16,Math.floor(room()/Math.max(call
 const BILL=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 150"><rect x="2" y="2" width="336" height="146" rx="6" fill="#f4f1e7" stroke="#121611" stroke-width="4"/><rect x="14" y="14" width="312" height="122" rx="3" fill="none" stroke="#121611" stroke-width="2"/><g fill="none" stroke="#121611" stroke-width="1.6" opacity=".55"><path d="M24 30h100M24 40h80M24 112h90M24 122h70M226 30h90M246 40h70M226 112h90M256 122h60"/></g><ellipse cx="88" cy="75" rx="34" ry="40" fill="#86bc66" stroke="#121611" stroke-width="3"/><circle cx="88" cy="66" r="13" fill="#121611"/><path d="M64 104c5-18 43-18 48 0z" fill="#121611"/><circle cx="262" cy="75" r="26" fill="none" stroke="#121611" stroke-width="3"/><text x="262" y="85" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900" fill="#121611">$</text><text x="24" y="78" font-family="Arial Black,Arial,sans-serif" font-size="22" font-weight="900" fill="#121611" opacity="0">.</text><rect x="157" y="0" width="26" height="150" fill="#121611"/></svg>`;
 document.documentElement.style.setProperty("--bill",`url("data:image/svg+xml,${encodeURIComponent(BILL)}")`);
 const IMPACT=0.52*620;
-function impact(){Sound.thud();const st=stackEl;st.classList.remove("thud");void st.offsetWidth;st.classList.add("thud");
+function impact(){Sound.thud(Math.max(0,named.length-1));const st=stackEl;st.classList.remove("thud");void st.offsetWidth;st.classList.add("thud");
   arena.classList.remove("shake");void arena.offsetWidth;arena.classList.add("shake");
   try{navigator.vibrate&&navigator.vibrate(10);}catch(e){}
   const y=stackEl.offsetHeight, floor=document.querySelector(".floor");
@@ -508,14 +553,14 @@ function clearStack(){stackEl.innerHTML="";coinsEl.innerHTML="";}
 
 // ---------- CALL ----------
 $("callRange").max=CATEGORY.max;
-function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));$("callNum").textContent=call;$("callRange").value=call;$("callRange").style.setProperty("--p",((call-1)/(CATEGORY.max-1)*100)+"%");
+function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));if(mode==="call"&&!testDay){try{const r=JSON.parse(store.get(revealKey()));if(r){r.call=call;store.set(revealKey(),JSON.stringify(r));}}catch(e){}}$("callNum").textContent=call;$("callRange").value=call;$("callRange").style.setProperty("--p",((call-1)/(CATEGORY.max-1)*100)+"%");
   $("ghostLbl").textContent="BET "+call;
   $("winPts").textContent=sign(score(call,call).total);
   $("losePts").textContent=sign(-STAKE);
   $("startBtn").textContent="BET "+call;layout();}
 $("minus").onclick=()=>{Sound.unlock();setCall(call-1);Sound.click();};$("plus").onclick=()=>{Sound.unlock();setCall(call+1);Sound.click();};
 $("callRange").oninput=e=>setCall(+e.target.value);
-$("catTag").textContent=CATEGORY.name;$("hint").textContent=CATEGORY.hint||"";document.title="Bluffer · "+CATEGORY.name;$("guess").placeholder=CATEGORY.noun.length>14?"Type an answer":`Name a${/^[aeiou]/i.test(CATEGORY.noun)?"n":""} ${CATEGORY.noun}`;
+$("hint").textContent=CATEGORY.hint||"";$("guess").placeholder=CATEGORY.noun.length>14?"Type an answer":`Name a${/^[aeiou]/i.test(CATEGORY.noun)?"n":""} ${CATEGORY.noun}`;
 // ---------- INTRO ----------
 (function buildExample(){const can=8,ex=[[5,"Too safe"],[8,"Spot on"],[11,"Too greedy"]];
   const vals=ex.map(([b])=>score(b,can).total),max=Math.max(...vals.map(Math.abs));
@@ -531,7 +576,7 @@ if(!store.get("bluffer-seen"))openIntro();
 // ---------- PLAY ----------
 let deadline=0,raf=0;
 function reset(){rejected=[];named=[];seen.clear();clearStack();$("list").innerHTML="";$("stamp").className="stamp";ghostEl.classList.remove("hit");}
-function start(){document.body.classList.remove("results");mode="play";reset();runToken++;checking=false;Sound.unlock();document.body.classList.add("playing");
+function start(){cancelAnimationFrame(betRaf);showTopic();disarmDone();document.body.classList.remove("results");mode="play";reset();saveLive();runToken++;checking=false;Sound.unlock();document.body.classList.add("playing");
   $("need").textContent=call;$("got").textContent=0;$("count").hidden=false;$("timer").hidden=false;
   layout();show("playScreen");$("fb").className="fb";$("fb").textContent="20 seconds per answer. Resets each time you land one.";
   $("guess").value="";$("guess").focus();arm();}
@@ -565,7 +610,7 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
     const tok=runToken;m=await checkOnline(v);checking=false;if(mode!=="play"||tok!==runToken)return;}
   if(!m){if(!rejected.includes(v))rejected.push(v);return nope(`"${v}" isn't on the list`);}
   if(seen.has(m.id))return nope("Already got that one");
-  seen.add(m.id);named.push(m.label);const n=named.length;
+  seen.add(m.id);named.push(m.label);const n=named.length;saveLive();
   if(n>call)addCoin();else addBundle();layout();$("got").textContent=n;
   const t=document.createElement("span");t.className="tag"+(n>call?" x":"");t.textContent=m.label;$("list").prepend(t);
   const f=$("fb");
@@ -576,7 +621,13 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   arm();}
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitGuess();}});
 $("addBtn").addEventListener("click",submitGuess);
-$("doneBtn").onclick=()=>end("done");
+// ending early needs two taps, so nobody ends their round by mistake thinking it's "enter"
+let cashArm=0;const doneLbl="I'm done · end round";
+function disarmDone(){const b=$("doneBtn");cashArm=0;b.classList.remove("armed");b.textContent=doneLbl;clearTimeout(b._t);}
+$("doneBtn").onclick=()=>{const b=$("doneBtn");
+  if(Date.now()-cashArm<3000){disarmDone();Sound.register();end("done");return;}
+  cashArm=Date.now();b.classList.add("armed");b.textContent="Tap again to end & cash out";Sound.click();
+  clearTimeout(b._t);b._t=setTimeout(disarmDone,3000);$("guess").focus();};
 
 // ---------- RESULT ----------
 let last=null;
@@ -646,8 +697,8 @@ $("shareBtn").onclick=async()=>{const {got,s}=last;const txt=shareText(call,got,
   if(navigator.share){try{await navigator.share({text:txt});return;}catch(e){if(e&&e.name==="AbortError")return;}}
   copyResult($("shareBtn"));};
 $("copyBtn").onclick=()=>copyResult($("copyBtn"));
-$("againBtn").onclick=()=>{document.body.classList.remove("results");mode="call";reset();setCall(call);show("callScreen");};
-function show(id){["callScreen","playScreen","resultScreen"].forEach(s=>$(s).hidden=s!==id);requestAnimationFrame(layout);}
+$("againBtn").onclick=()=>{document.body.classList.remove("results");mode="reveal";reset();setCall(call);hideTopic();$("timer").hidden=true;show("revealScreen");};
+function show(id){["revealScreen","callScreen","playScreen","resultScreen"].forEach(s=>$(s).hidden=s!==id);requestAnimationFrame(layout);}
 $("startBtn").onclick=start;
 addEventListener("resize",layout);
 // iPhone keyboard: size the app to the visible area so the input never hides behind the keyboard
@@ -657,9 +708,33 @@ function fitViewport(){const h=vv?vv.height:innerHeight;document.documentElement
 if(vv){vv.addEventListener("resize",fitViewport);vv.addEventListener("scroll",()=>window.scrollTo(0,0));}
 fitViewport();
 if(window.ResizeObserver)new ResizeObserver(()=>layout()).observe(arena);
-setCall(10);
+// ---------- HIDDEN TOPIC + BET CLOCK ----------
+const BET_SECS=30;let betDeadline=0,betRaf=0,betLast=0;
+const revealKey=()=>"bluffer-reveal-"+issue(),liveKey=()=>"bluffer-live-"+issue();
+function hideTopic(){document.body.classList.add("hidden-topic");const words=CATEGORY.name.split(" ");
+  $("catTag").classList.remove("revealed");$("catTag").innerHTML='<span class="redact" style="width:2.4em"></span> <span class="redact" style="width:3.4em"></span>'; /* same shape every day, so it gives nothing away */document.title="Bluffer";}
+function showTopic(){document.body.classList.remove("hidden-topic");$("catTag").textContent=CATEGORY.name;document.title="Bluffer · "+CATEGORY.name;}
+function revealTopic(fromSave){showTopic();if(!fromSave){$("catTag").classList.add("revealed");Sound.unlock();Sound.win();}
+  let rec=null;try{rec=JSON.parse(store.get(revealKey()))}catch(e){}
+  if(!rec){rec={t:Date.now(),call};if(!testDay)store.set(revealKey(),JSON.stringify(rec));}
+  const left=BET_SECS-(Date.now()-rec.t)/1000;
+  if(rec.call)setCall(rec.call);
+  if(left<=0)return start();
+  mode="call";show("callScreen");betDeadline=performance.now()+left*1000;betLast=0;cancelAnimationFrame(betRaf);betTick();}
+function betTick(){if(mode!=="call")return;const left=Math.max(0,(betDeadline-performance.now())/1000),sec=Math.ceil(left);
+  $("timer").hidden=false;$("timerFill").style.width=(left/BET_SECS*100)+"%";$("timer").classList.toggle("low",left<=5);
+  $("betClock").textContent=sec+"s";$("betClock").classList.toggle("low",left<=5);
+  if(left<=5&&sec!==betLast&&sec>0)Sound.tick();betLast=sec;
+  if(left<=0){start();return;}betRaf=requestAnimationFrame(betTick);}
+$("revealBtn").onclick=()=>revealTopic(false);
+function saveLive(){if(!testDay)store.set(liveKey(),JSON.stringify({call,named,rejected}));}
+setCall(10);mode="reveal";hideTopic();show("revealScreen");
+(function resumeToday(){if(testDay)return;let done=null;try{done=JSON.parse(store.get(dayKey()))}catch(e){}if(done)return;
+  let live=null;try{live=JSON.parse(store.get(liveKey()))}catch(e){}
+  if(live){showTopic();setCall(live.call);named=live.named||[];rejected=live.rejected||[];seen=new Set(named.map(norm));$("intro").hidden=true;end("left");return;} // left mid-round: it counts
+  if(store.get(revealKey())){$("intro").hidden=true;revealTopic(true);}})();
 (function restoreToday(){if(testDay)return;let rec=null;try{rec=JSON.parse(store.get(dayKey()))}catch(e){}
-  if(!rec||!rec.named)return;setCall(rec.call);named=rec.named;rejected=rec.rejected||[];seen=new Set(named.map(norm));
+  if(!rec||!rec.named)return;showTopic();setCall(rec.call);named=rec.named;rejected=rec.rejected||[];seen=new Set(named.map(norm));
   document.body.classList.add("results");$("intro").hidden=true;end(rec.why,true);})();
 function tickNext(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let t=Math.max(0,Math.floor((m-n)/1000));
   const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),se=t%60;$("nextIn").textContent=[h,mi,se].map(x=>String(x).padStart(2,"0")).join(":");}
