@@ -74,7 +74,14 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .help{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(244,239,227,.25);background:var(--glass);color:var(--chalk);font-weight:700;cursor:pointer}
 .title{text-align:center;margin-top:46px;transition:margin .3s ease}
 .playing .title{margin-top:14px}
-.playing .title .eyebrow,.playing .hint{display:none}
+.playing .title .eyebrow,.playing .hint,.playing .today{display:none}
+.today{display:inline-flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 12px 6px 10px;border-radius:99px;
+  background:rgba(242,193,78,.12);box-shadow:inset 0 0 0 1px rgba(242,193,78,.45);color:var(--gold);
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.today b{color:var(--chalk);font-weight:700;letter-spacing:.08em}
+.today .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);animation:live 1.6s ease-in-out infinite}
+@keyframes live{50%{opacity:.35}}
+.title .date{margin-top:8px}
 .hint{margin-top:6px;font-size:13px;color:var(--dim)}
 .playing .cat{font-size:28px}
 .eyebrow{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
@@ -275,7 +282,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--gol
 <div class="ui">
   <header><div class="logo">BLUFF<span>ER</span></div><div class="hbtns"><button class="help" id="soundBtn" aria-label="Sound on" aria-pressed="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h3l5-4v14l-5-4H4z"/><path id="waves" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/><path id="mute" d="M16 9l5 6M21 9l-5 6" hidden/></svg></button><button class="help" id="helpBtn" aria-label="How to play">?</button></div></header>
 
-  <div class="title"><div class="eyebrow" id="day">No. 1</div><div class="cat" id="catTag">Beer brands</div><div class="hint" id="hint"></div></div>
+  <div class="title"><div class="today"><span class="dot"></span>Today's topic <b id="dayNo">#1</b></div><div class="cat" id="catTag">Beer brands</div><div class="hint" id="hint"></div><div class="eyebrow date" id="day">Friday 23 October</div></div>
 
   <div class="arena">
     <div class="floor">
@@ -578,7 +585,7 @@ setCall(10);
 function tickNext(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let t=Math.max(0,Math.floor((m-n)/1000));
   const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),se=t%60;$("nextIn").textContent=[h,mi,se].map(x=>String(x).padStart(2,"0")).join(":");}
 tickNext();setInterval(tickNext,1000);
-$("day").textContent="No. "+issue()+" · "+new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
+$("dayNo").textContent="#"+issue();$("day").textContent=new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
 </script>
 
 </body>
