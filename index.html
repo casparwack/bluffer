@@ -416,11 +416,29 @@ const STOP=CATEGORY.strip?new RegExp("\\b("+CATEGORY.strip+")\\b","g"):null;
 const norm=s=>{s=s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g,"and");if(STOP)s=s.replace(STOP,"");return s.replace(/[^a-z0-9]/g,"");};
 const ALIAS=new Map();
 CATEGORY.answers.forEach(line=>{const p=line.split("|");const id=norm(p[0]);p.forEach(a=>{const k=norm(a);if(k&&!ALIAS.has(k))ALIAS.set(k,{id,label:p[0]});});});
-function lev(a,b){const m=a.length,n=b.length;if(Math.abs(m-n)>1)return 9;const d=Array.from({length:m+1},(_,i)=>[i]);for(let j=1;j<=n;j++)d[0][j]=j;for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n];}
+// ---------- AUTOCORRECT ----------
+// Typo distance where a swapped pair of letters ("hieneken") counts as one mistake. Stops early once it's over the limit.
+function lev(a,b,max=9){const m=a.length,n=b.length;if(Math.abs(m-n)>max)return max+1;
+  let pp=null,p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){const c=[i];let best=i;
+    for(let j=1;j<=n;j++){let v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(pp&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])v=Math.min(v,pp[j-2]+1);c[j]=v;if(v<best)best=v;}
+    if(best>max)return max+1;pp=p;p=c;}
+  return p[n];}
+// how many typos to forgive: none on very short words, more on long ones
+const allowed=len=>len<=3?0:len<=6?1:len<=10?2:3;
+const squash=s=>s.replace(/(.)\1+/g,"$1"); // "heinnekken" -> "heineken"
 function match(input){const k=norm(input);if(!k)return null;if(ALIAS.has(k))return ALIAS.get(k);
   if(k.length>3&&k.endsWith("s")&&ALIAS.has(k.slice(0,-1)))return ALIAS.get(k.slice(0,-1)); // plurals
   if(k.length>3&&ALIAS.has(k+"s"))return ALIAS.get(k+"s");
-  if(k.length>=5){for(const [key,v] of ALIAS){if(key.length>=5&&lev(k,key)<=1)return v;}}return null;}
+  const tol=allowed(k.length);if(!tol)return null;
+  const ks=squash(k);let best=null,bestD=tol+1,tie=false;
+  for(const [key,v] of ALIAS){if(key.length<3||Math.abs(key.length-k.length)>tol)continue;
+    let d=Math.min(lev(k,key,tol),squash(key)===ks?0.5:9);
+    if(d>=2&&key[0]!==k[0])continue; // bigger fixes must at least start with the same letter
+    if(d<bestD){best=v;bestD=d;tie=false;}else if(d===bestD&&best&&v.id!==best.id)tie=true;}
+  if(!best||tie)return null; // nothing close, or two different answers equally close
+  return Object.assign({},best,{fixed:true});}
 function score(call,got){
   if(got>=call){const base=call*STAKE,extra=(got-call)*EXTRA;return{base,extra,short:0,hit:true,total:base+extra};}
   const short=(call-got)*STAKE;return{base:0,extra:0,short,hit:false,total:-short};}
@@ -555,6 +573,7 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   if(n===call){f.className="fb gold";f.textContent="Bet covered. Extras drop as coins, +25 each.";ghostEl.classList.add("hit");flash();setTimeout(()=>Sound.win(),330);}
   else if(n>call){f.className="fb gold";f.textContent="+25 coin";}
   else{f.className="fb good";f.textContent=`${call-n} to go`;}
+  if(m.fixed){f.textContent=`Auto-corrected to ${m.label}. `+f.textContent;}
   arm();}
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitGuess();}});
 $("addBtn").addEventListener("click",submitGuess);
