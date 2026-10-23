@@ -187,8 +187,8 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 #startBtn::after,#closeHelp::after,#revealBtn::after{content:"→";font-stretch:100%;font-weight:400;font-size:18px}
 .btn:active{transform:scale(.98)}
 .btn.sec{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
-#doneBtn{width:auto;height:40px;align-self:center;margin-top:6px;padding:0 18px;font-family:var(--sans);font-stretch:105%;font-weight:600;font-size:12.5px;letter-spacing:.02em;box-shadow:inset 0 0 0 1px var(--ink-3);color:var(--ink-2)}
-#doneBtn.armed{background:var(--red);color:var(--paper);box-shadow:none;animation:nudge .35s}
+#doneBtn{width:auto;height:44px;align-self:center;margin-top:6px;padding:0 22px;font-family:var(--sans);font-stretch:110%;font-weight:700;font-size:13px;letter-spacing:.02em;box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}
+#doneBtn::before{content:"■";font-size:9px;margin-right:8px;color:var(--red)}
 @keyframes nudge{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .entry{display:flex;align-items:center;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:6px}
 #guess{flex:1;min-width:0;height:52px;padding:0;border:0;background:transparent;color:var(--ink);font:700 22px var(--sans);font-stretch:110%;letter-spacing:-.01em;outline:none}
@@ -214,6 +214,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .cs-brand{font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:13px;letter-spacing:0}
 .cs-brand i{font-style:normal}
 .cs-no{color:var(--ink-2)}
+.cs-cat span{font-stretch:100%;font-weight:400;margin:0 .1em}
 .cs-cat{margin-top:12px;font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:25px;line-height:.95;letter-spacing:-.02em;text-transform:uppercase}
 .cs-bet{margin-top:6px;font-family:var(--serif);font-style:italic;font-size:16px;color:var(--ink-2)}
 .cs-bet span{color:var(--ink)}
@@ -250,12 +251,17 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .playing .cat{font-size:26px}
 
 /* ---------- how to play (paper sheet) ---------- */
-.intro{position:fixed;inset:0;z-index:10;overflow-y:auto;background:var(--paper);animation:fadeIn .3s ease}
+.intro{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+  padding:max(20px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));
+  background:rgba(18,22,17,.38);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fadeIn .3s ease}
+.intro-card{position:relative;width:100%;max-width:420px;max-height:min(76vh,760px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  background:var(--paper);border-radius:22px;box-shadow:0 0 0 1.5px var(--ink),0 24px 60px rgba(18,22,17,.35);animation:popIn .4s cubic-bezier(.2,1.2,.4,1)}
+@keyframes popIn{from{opacity:0;transform:translateY(24px) scale(.96)}}
+.intro-x{position:sticky;top:0;float:right;margin:12px 12px -48px 0;z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);font-size:18px;line-height:1;cursor:pointer}
 @keyframes fadeIn{from{opacity:0}}
 .intro.out{animation:fadeOut .28s ease forwards}
 @keyframes fadeOut{to{opacity:0}}
-.intro-in{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:26px;
-  padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));padding-block:36px 30px}
+.intro-in{display:flex;flex-direction:column;gap:22px;padding:26px 22px 22px}
 .intro-in>*{animation:up .5s var(--ease) both}
 .intro-in>*:nth-child(2){animation-delay:.05s}.intro-in>*:nth-child(3){animation-delay:.1s}.intro-in>*:nth-child(4){animation-delay:.15s}.intro-in>*:nth-child(5){animation-delay:.2s}
 @keyframes up{from{opacity:0;transform:translateY(10px)}}
@@ -296,7 +302,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 /* phone details */
 .standalone .ui{padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:max(18px,env(safe-area-inset-bottom,0px))}
 .standalone .timer{top:env(safe-area-inset-top,0px)}
-.standalone .intro-in{padding-top:max(36px,calc(env(safe-area-inset-top,0px) + 16px));padding-bottom:max(30px,calc(env(safe-area-inset-bottom,0px) + 12px))}
 .kb .title{display:none}
 .kb .ui{padding-bottom:8px}
 @media (max-height:520px){.playing .title{display:none}.playing .ui{padding-bottom:8px}}
@@ -331,12 +336,12 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
 
   <!-- CALL -->
   <section class="panel" id="revealScreen">
-    <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>30 seconds to place your bet</b>, then the clock starts.</p>
+    <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>20 seconds to place your bet</b>, then the clock starts.</p>
     <button class="btn" id="revealBtn">REVEAL TOPIC</button>
   </section>
 
   <section class="panel" id="callScreen" hidden>
-    <div class="ask">How many can you name? <span class="betclock" id="betClock">30s</span></div>
+    <div class="ask">How many can you name? <span class="betclock" id="betClock">20s</span></div>
     <div class="callrow">
       <button class="step" id="minus" aria-label="Lower call">−</button>
       <div class="num" id="callNum">10</div>
@@ -358,14 +363,14 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
     <div class="fb" id="fb">20 seconds per answer. Resets each time you land one.</div>
     <div class="list" id="list"></div>
-    <button class="btn sec" id="doneBtn">I'm done · end round</button>
+    <button class="btn sec" id="doneBtn">Stop &amp; cash out</button>
   </section>
 
   <!-- RESULT -->
   <section class="panel" id="resultScreen" hidden>
     <div class="card-share" id="shareCard">
       <div class="cs-head"><span class="cs-brand">BLUFF<i>ER</i></span><span class="cs-no" id="csNo">#1</span></div>
-      <div class="cs-cat" id="csCat">🍺 Beer brands</div>
+      <div class="cs-cat" id="csCat">Bet 10 → 12</div>
       <div class="cs-bet" id="csBet">Bet 10 <span>→</span> named 12</div>
       <div class="cs-grid" id="csGrid"></div>
       <div class="cs-foot"><span class="cs-verdict" id="verdict">Called it</span><span class="cs-pts" id="total">+1,500</span></div>
@@ -385,12 +390,13 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
   </section>
 </div>
 
-<div class="intro" id="intro" hidden role="dialog" aria-labelledby="introTitle">
+<div class="intro" id="intro" hidden role="dialog" aria-modal="true" aria-labelledby="introTitle">
+  <div class="intro-card"><button class="intro-x" id="introX" aria-label="Close">×</button>
   <div class="intro-in">
     <div class="i-head"><div class="eyebrow">How to play</div><h2 id="introTitle">Bet big.<br><span>Back it up.</span></h2></div>
 
     <ol class="steps">
-      <li><span class="n">1</span><div><b>Reveal and bet</b><p>One topic a day, hidden until you tap reveal. Then you get <strong>30 seconds</strong> to bet how many you can name.</p></div></li>
+      <li><span class="n">1</span><div><b>Reveal and bet</b><p>One topic a day, hidden until you tap reveal. Then you get <strong>20 seconds</strong> to bet how many you can name.</p></div></li>
       <li><span class="n">2</span><div><b>Name them</b><p><strong>20 seconds per answer.</strong> The clock resets every time you land one. Wrong guesses don't reset it, so don't panic-type.</p></div></li>
       <li><span class="n">3</span><div><b>Cash out</b><p>Every answer drops a bundle of cash on the table. Reach your bet line and you bank it. Fall short and you're busted.</p></div></li>
     </ol>
@@ -414,6 +420,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
 
     <button class="btn" id="closeHelp">LET'S PLAY</button>
+  </div>
   </div>
 </div>
 
@@ -567,9 +574,9 @@ $("hint").textContent=CATEGORY.hint||"";$("guess").placeholder=CATEGORY.noun.len
   $("bets").innerHTML=ex.map(([b,lab],i)=>{const v=vals[i],w=(Math.abs(v)/max*(v>=0?70:30)).toFixed(1);
     return `<div class="bet${b===can?" best":""}"><div class="who">Bet ${b}<small>${lab}</small></div><div class="track"><i class="${v>=0?"p":"m"}" style="width:${w}%"></i></div><div class="v ${v>=0?"good":"bad"}">${sign(v)}</div></div>`;}).join("");})();
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
-function openIntro(){const el=$("intro");el.classList.remove("out");el.hidden=false;el.scrollTop=0;}
+function openIntro(){const el=$("intro");el.classList.remove("out");el.hidden=false;el.querySelector(".intro-card").scrollTop=0;}
 function closeIntro(){const el=$("intro");el.classList.add("out");store.set("bluffer-seen","1");setTimeout(()=>{el.hidden=true;el.classList.remove("out");},280);}
-$("helpBtn").onclick=openIntro;$("closeHelp").onclick=closeIntro;
+$("helpBtn").onclick=openIntro;$("closeHelp").onclick=closeIntro;$("introX").onclick=closeIntro;$("intro").addEventListener("click",e=>{if(e.target.id==="intro")closeIntro();});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("intro").hidden)closeIntro();});
 if(!store.get("bluffer-seen"))openIntro();
 
@@ -621,13 +628,9 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   arm();}
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitGuess();}});
 $("addBtn").addEventListener("click",submitGuess);
-// ending early needs two taps, so nobody ends their round by mistake thinking it's "enter"
-let cashArm=0;const doneLbl="I'm done · end round";
-function disarmDone(){const b=$("doneBtn");cashArm=0;b.classList.remove("armed");b.textContent=doneLbl;clearTimeout(b._t);}
-$("doneBtn").onclick=()=>{const b=$("doneBtn");
-  if(Date.now()-cashArm<3000){disarmDone();Sound.register();end("done");return;}
-  cashArm=Date.now();b.classList.add("armed");b.textContent="Tap again to end & cash out";Sound.click();
-  clearTimeout(b._t);b._t=setTimeout(disarmDone,3000);$("guess").focus();};
+// ends the round early and banks what you've got
+function disarmDone(){}
+$("doneBtn").onclick=()=>{Sound.register();end("done");};
 
 // ---------- RESULT ----------
 let last=null;
@@ -645,8 +648,8 @@ function end(why,restore){mode="end";document.body.classList.add("results");docu
       [...stackEl.children,...coinsEl.children].forEach((b,i)=>{b.style.setProperty("--fx",rnd(-260,260).toFixed(0)+"px");b.style.setProperty("--fr",rnd(-200,200).toFixed(0)+"deg");b.style.animationDelay=(i*20)+"ms";b.classList.add("fly");});},miss*gap+450);}
   $("total").textContent=(s.total>=0?"+":"")+fmt(s.total);$("total").classList.toggle("neg",s.total<0);
   $("verdict").classList.toggle("neg",!s.hit);
-  $("csNo").textContent="#"+issue();$("csCat").textContent=CATEGORY.emoji+" "+CATEGORY.name;
-  $("csBet").innerHTML=`Bet ${call} <span>→</span> named ${got}`;
+  $("csNo").textContent="Daily #"+issue();$("csCat").innerHTML=`Bet ${call} <span>→</span> ${got}`;
+  $("csBet").textContent=new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
   $("csGrid").innerHTML=grid(call,got).split("\n").map(r=>`<div>${r}</div>`).join("");
   const r=s.hit?[[`Backed up ${call} × 150`,s.base,"pos"]]:[];
   if(s.extra)r.push([`${got-call} coin${got-call>1?"s":""} × 25`,s.extra,"pos"]);
@@ -687,7 +690,7 @@ function grid(c,g){const rows=[];let line="";
 function shareText(c,g,s){
   const verdict=!s.hit?"🚨 Busted":g>c?"💰 Banked":"🎯 Called it";
   const pts=(s.total>=0?"+":"−")+Math.abs(s.total).toLocaleString("en-NZ");
-  return `BLUFFER #${issue()} ${CATEGORY.emoji} ${CATEGORY.name}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} · ${pts}\nhttps://bluffer.lol`;}
+  return `BLUFFER #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} · ${pts}\nhttps://bluffer.lol`;}
 async function copyResult(btn){const {got,s}=last;const txt=shareText(call,got,s);const label=btn.textContent;
   try{await navigator.clipboard.writeText(txt);btn.textContent="COPIED ✓";}
   catch(e){try{const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);
@@ -709,7 +712,7 @@ if(vv){vv.addEventListener("resize",fitViewport);vv.addEventListener("scroll",()
 fitViewport();
 if(window.ResizeObserver)new ResizeObserver(()=>layout()).observe(arena);
 // ---------- HIDDEN TOPIC + BET CLOCK ----------
-const BET_SECS=30;let betDeadline=0,betRaf=0,betLast=0;
+const BET_SECS=20;let betDeadline=0,betRaf=0,betLast=0;
 const revealKey=()=>"bluffer-reveal-"+issue(),liveKey=()=>"bluffer-live-"+issue();
 function hideTopic(){document.body.classList.add("hidden-topic");const words=CATEGORY.name.split(" ");
   $("catTag").classList.remove("revealed");$("catTag").innerHTML='<span class="redact" style="width:2.4em"></span> <span class="redact" style="width:3.4em"></span>'; /* same shape every day, so it gives nothing away */document.title="Bluffer";}
