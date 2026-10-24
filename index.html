@@ -233,6 +233,34 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .next{font-size:13px;color:var(--ink-2)}
 .next b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
 .linkbtn{border:0;background:none;font:600 13px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0}
+/* leaderboard */
+.champ{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;padding:12px 16px;border-radius:14px;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.champ-k{grid-column:1/3;font-size:10px;font-weight:700;font-stretch:110%;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.champ b{font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:18px;line-height:1.1;text-transform:uppercase;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.champ span:last-child{font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:18px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.champ small{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:13px;font-stretch:100%;text-transform:none;letter-spacing:0;color:var(--ink-2)}
+.lb{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1.5px solid var(--ink)}
+.lb-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lb-you{font-size:12px;font-weight:700}
+.lb-form{display:flex;gap:8px}
+#lbName{flex:1;min-width:0;height:46px;padding:0 16px;border:0;border-radius:99px;background:var(--paper);color:var(--ink);font:600 16px var(--sans);box-shadow:inset 0 0 0 1.5px var(--ink);outline:none}
+#lbName::placeholder{color:var(--ink-3)}
+#lbName:focus{box-shadow:inset 0 0 0 2.5px var(--ink)}
+.lb-go{flex:none;height:46px;padding:0 20px;border:0;border-radius:99px;background:var(--ink);color:var(--paper);font-family:var(--wide);font-stretch:125%;font-weight:800;font-size:13px;cursor:pointer}
+.lb-go:disabled{opacity:.5}
+.lb-msg{min-height:0;font-size:13px;font-weight:600}
+.lb-msg:empty{display:none}
+.lb-msg.bad{color:var(--red)}
+.lb-list{list-style:none;margin:0;padding:0;counter-reset:r}
+.lb-list li{display:grid;grid-template-columns:26px 1fr auto;align-items:baseline;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);counter-increment:r}
+.lb-list li::before{content:counter(r);font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:14px}
+.lb-list li:first-child::before{content:"★";color:var(--ink)}
+.lb-list li.me{background:linear-gradient(90deg,rgba(244,241,231,.6),transparent);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:8px}
+.lb-list .nm{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-list .nm small{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:13px;color:var(--ink-2)}
+.lb-list .pt{font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:16px;font-variant-numeric:tabular-nums}
+.lb-list .pt.neg{color:var(--red)}
+.lb-empty{font-size:13px;color:var(--ink-2)}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);padding-top:14px;border-top:1.5px solid var(--ink)}
 .stat{display:flex;flex-direction:column;gap:3px;padding-left:10px;border-left:1px solid var(--rule)}
 .stat:first-child{padding-left:0;border-left:0}
@@ -336,6 +364,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
 
   <!-- CALL -->
   <section class="panel" id="revealScreen">
+    <div class="champ" id="champ" hidden><span class="champ-k">Today's top bluffer</span><b id="champName">–</b><span id="champLine"></span></div>
     <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>20 seconds to place your bet</b>, then the clock starts.</p>
     <button class="btn" id="revealBtn">REVEAL TOPIC</button>
   </section>
@@ -378,6 +407,15 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
     <ul class="rows" id="rows"></ul>
     <div class="btns"><button class="btn" id="shareBtn">SHARE</button><button class="btn sec" id="copyBtn">COPY</button></div>
+    <div class="lb" id="lb">
+      <div class="lb-head"><span class="eyebrow">Today's leaderboard</span><span class="lb-you" id="lbYou"></span></div>
+      <form class="lb-form" id="lbForm" autocomplete="off">
+        <input id="lbName" type="text" maxlength="18" placeholder="Your name" aria-label="Your name" autocapitalize="words" enterkeyhint="send">
+        <button type="submit" class="lb-go" id="lbGo">Submit</button>
+      </form>
+      <div class="lb-msg" id="lbMsg"></div>
+      <ol class="lb-list" id="lbList"></ol>
+    </div>
     <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button></div>
     <div class="stats" id="stats">
       <div class="stat"><b id="stPlayed">0</b><small>Played</small></div>
@@ -656,9 +694,38 @@ function end(why,restore){mode="end";document.body.classList.add("results");docu
   if(s.short)r.push([`${call-got} short × 150`,-s.short,"neg"]);
   $("rows").innerHTML=r.map(([a,b,c])=>`<li><span>${a}</span><span class="${c}">${sign(b)}</span></li>`).join("");
   if(!restore&&!testDay){store.set(dayKey(),JSON.stringify({call,named,why,rejected}));recordStats(s);}
-  renderStats();renderMissed();renderReport();
+  renderStats();renderMissed();renderReport();renderBoard();loadBoard();
   $("againBtn").hidden=!testDay;
   show("resultScreen");}
+
+// ---------- LEADERBOARD ----------
+// Live on bluffer.lol through /api/scores. Anywhere else (like a preview) it shows the seeded scores only.
+const LB_API=/(^|\.)bluffer\.lol$|vercel\.app$|^localhost$/.test(location.hostname)?"/api/scores":null;
+const LB_SEED={3:[{name:"Andrew Gough",bet:30,named:33,score:4575}]};
+let board=[];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+async function loadBoard(){let list=null;
+  if(LB_API){try{const r=await fetch(LB_API+"?day="+issue(),{cache:"no-store"});if(r.ok)list=(await r.json()).top;}catch(e){}}
+  board=list||(LB_SEED[issue()]||[]);renderChamp();renderBoard();}
+function renderChamp(){const c=board[0];$("champ").hidden=!c;if(!c)return;
+  $("champName").innerHTML=`${esc(c.name)}<small>Bet ${c.bet}, named ${c.named}. Beat it.</small>`;$("champLine").textContent=fmt(c.score);}
+const subKey=()=>"bluffer-sub-"+issue();
+function renderBoard(){const mine=store.get(subKey());
+  $("lbList").innerHTML=board.length?board.map(r=>`<li class="${mine&&r.name===mine?"me":""}"><span class="nm">${esc(r.name)}<small>Bet ${r.bet} → ${r.named}</small></span><span class="pt ${r.score<0?"neg":""}">${r.score<0?"−":""}${Math.abs(r.score).toLocaleString("en-NZ")}</span></li>`).join(""):'<li class="lb-empty" style="display:block">No scores yet. Be the first.</li>';
+  const done=!!mine;$("lbForm").hidden=done||testDay;$("lbYou").textContent=done?"Submitted as "+mine:"";
+  if(testDay&&!done){$("lbMsg").className="lb-msg";$("lbMsg").textContent="Submitting is off in test mode.";}}
+$("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("lbName").value.trim();const msg=$("lbMsg");
+  if(name.length<2){msg.className="lb-msg bad";msg.textContent="Type your name first";return;}
+  if(!LB_API){msg.className="lb-msg bad";msg.textContent="Submitting works on bluffer.lol";return;}
+  $("lbGo").disabled=true;msg.className="lb-msg";msg.textContent="Submitting…";
+  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length})});
+    const j=await r.json();
+    if(!r.ok)throw new Error(j.error||"Couldn't submit");
+    store.set(subKey(),name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
+    if(j.rank===1)Sound.win();else Sound.click();renderChamp();renderBoard();
+  }catch(err){msg.className="lb-msg bad";msg.textContent=err.message||"Couldn't submit, try again";}
+  $("lbGo").disabled=false;});
+loadBoard();
 
 // ---------- DAILY LOCK + STATS ----------
 const dayKey=()=>"bluffer-day-"+issue();
