@@ -408,7 +408,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     <ul class="rows" id="rows"></ul>
     <div class="btns"><button class="btn" id="shareBtn">SHARE</button><button class="btn sec" id="copyBtn">COPY</button></div>
     <div class="lb" id="lb">
-      <div class="lb-head"><span class="eyebrow">Today's leaderboard</span><span class="lb-you" id="lbYou"></span></div>
+      <div class="lb-head"><span class="eyebrow">Today's top 3</span><span class="lb-you" id="lbYou"></span></div>
       <form class="lb-form" id="lbForm" autocomplete="off">
         <input id="lbName" type="text" maxlength="18" placeholder="Your name" aria-label="Your name" autocapitalize="words" enterkeyhint="send">
         <button type="submit" class="lb-go" id="lbGo">Submit</button>
@@ -705,13 +705,13 @@ const LB_SEED={3:[{name:"Andrew Gough",bet:30,named:33,score:4575}]};
 let board=[];
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function loadBoard(){let list=null;
-  if(LB_API){try{const r=await fetch(LB_API+"?day="+issue(),{cache:"no-store"});if(r.ok)list=(await r.json()).top;}catch(e){}}
+  if(LB_API){try{const r=await fetch(LB_API+"?day="+issue(),{cache:"no-store"});if(r.ok&&(r.headers.get("content-type")||"").includes("json"))list=(await r.json()).top;}catch(e){}}
   board=list||(LB_SEED[issue()]||[]);renderChamp();renderBoard();}
 function renderChamp(){const c=board[0];$("champ").hidden=!c;if(!c)return;
   $("champName").innerHTML=`${esc(c.name)}<small>Bet ${c.bet}, named ${c.named}. Beat it.</small>`;$("champLine").textContent=fmt(c.score);}
 const subKey=()=>"bluffer-sub-"+issue();
 function renderBoard(){const mine=store.get(subKey());
-  $("lbList").innerHTML=board.length?board.map(r=>`<li class="${mine&&r.name===mine?"me":""}"><span class="nm">${esc(r.name)}<small>Bet ${r.bet} → ${r.named}</small></span><span class="pt ${r.score<0?"neg":""}">${r.score<0?"−":""}${Math.abs(r.score).toLocaleString("en-NZ")}</span></li>`).join(""):'<li class="lb-empty" style="display:block">No scores yet. Be the first.</li>';
+  $("lbList").innerHTML=board.length?board.slice(0,3).map(r=>`<li class="${mine&&r.name===mine?"me":""}"><span class="nm">${esc(r.name)}<small>Bet ${r.bet} → ${r.named}</small></span><span class="pt ${r.score<0?"neg":""}">${r.score<0?"−":""}${Math.abs(r.score).toLocaleString("en-NZ")}</span></li>`).join(""):'<li class="lb-empty" style="display:block">No scores yet. Be the first.</li>';
   const done=!!mine;$("lbForm").hidden=done||testDay;$("lbYou").textContent=done?"Submitted as "+mine:"";
   if(testDay&&!done){$("lbMsg").className="lb-msg";$("lbMsg").textContent="Submitting is off in test mode.";}}
 $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("lbName").value.trim();const msg=$("lbMsg");
@@ -719,7 +719,7 @@ $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$(
   if(!LB_API){msg.className="lb-msg bad";msg.textContent="Submitting works on bluffer.lol";return;}
   $("lbGo").disabled=true;msg.className="lb-msg";msg.textContent="Submitting…";
   try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length})});
-    const j=await r.json();
+    let j={};try{j=await r.json();}catch(_){throw new Error(r.status===404?"Leaderboard isn't set up yet (scores file not found)":"Leaderboard isn't responding, try again soon");}
     if(!r.ok)throw new Error(j.error||"Couldn't submit");
     store.set(subKey(),name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
     if(j.rank===1)Sound.win();else Sound.click();renderChamp();renderBoard();
