@@ -29,7 +29,7 @@ async function redis(cmd) {
 const score = (bet, named) => (named >= bet ? bet * STAKE + (named - bet) * EXTRA : -(bet - named) * STAKE);
 const today = () => Math.floor((Date.now() - LAUNCH) / 864e5) + 1;
 
-async function top(day, n = 10) {
+async function top(day, n = 3) {
   let rows = [];
   if (URL && TOKEN) {
     const raw = await redis(["ZRANGE", `lb:${day}`, 0, n - 1, "REV", "WITHSCORES"]);
