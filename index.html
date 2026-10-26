@@ -24,6 +24,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://bluffer.lol/og.png">
 <script defer src="/_vercel/insights/script.js"></script>
+<script>/* special days (NZ date) */try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"Pacific/Auckland"}).format(new Date());var S={"2026-10-28":"/acc.html"};if(S[d]&&!/^#day/.test(location.hash))location.replace(S[d]);}catch(e){}</script>
 <title>Bluffer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Newsreader:ital,opsz,wght@1,6..72,400..500&display=swap">
@@ -73,7 +74,7 @@ input{-webkit-user-select:text;user-select:text;-webkit-appearance:none;appearan
 @keyframes flash{15%{opacity:.35}}
 
 /* ---------- shell ---------- */
-.ui{position:relative;z-index:1;height:var(--app-h,100%);max-width:460px;margin:0 auto;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;
+.ui{position:relative;z-index:1;height:var(--app-h,100%);max-width:460px;margin:0 auto;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none;
   padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));padding-block:16px 18px}
 .ui::-webkit-scrollbar{display:none}
 header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:40px}
@@ -144,6 +145,7 @@ header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height
 .stamp{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%) rotate(-9deg) scale(2.2);opacity:0;pointer-events:none;
   font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:46px;line-height:1;letter-spacing:-.01em;text-transform:uppercase;
   color:var(--red);border:3px solid currentColor;padding:8px 16px 6px;border-radius:4px;background:rgba(244,241,231,.9)}
+.stamp:not(.on){display:none}
 .stamp.gold{color:var(--ink)}
 .stamp.on{animation:stamp .35s cubic-bezier(.3,1.5,.5,1) forwards}
 @keyframes stamp{to{opacity:1;transform:translate(-50%,-50%) rotate(-9deg) scale(1)}}
@@ -168,7 +170,7 @@ header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height
 .step:active{background:rgba(244,241,231,.14)}
 .num{display:grid;place-items:center;border-radius:99px;background:var(--paper);font-family:var(--wide);font-stretch:125%;font-weight:900;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
 /* slider: a ruler */
-input[type=range]{width:100%;height:30px;margin:0;background:transparent;cursor:pointer;touch-action:pan-y}
+input[type=range]{width:100%;height:44px;margin:-7px 0;background:transparent;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
 input[type=range]::-webkit-slider-runnable-track{height:12px;background:
   linear-gradient(var(--ink),var(--ink)) 0 100%/var(--p,15%) 3px no-repeat,
   repeating-linear-gradient(90deg,var(--ink) 0 1.5px,transparent 1.5px 10%) 0 100%/100% 12px no-repeat,
@@ -177,6 +179,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;heigh
 input[type=range]::-moz-range-track{height:1.5px;background:var(--ink-3)}
 input[type=range]::-moz-range-progress{height:3px;background:var(--ink)}
 input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radius:5px;background:var(--ink)}
+.num input{width:100%;height:100%;border:0;background:none;text-align:center;font:inherit;color:inherit;outline:0;padding:0}
+.step,.num{touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .stakes{display:flex;justify-content:space-between;gap:12px;padding:10px 0 2px;border-top:1.5px solid var(--ink)}
 .stake{display:flex;align-items:baseline;gap:8px}
 .stake .eyebrow{color:var(--ink-2)}
@@ -603,8 +607,25 @@ function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));if(mode==="call"&&
   $("winPts").textContent=sign(score(call,call).total);
   $("losePts").textContent=sign(-STAKE);
   $("startBtn").textContent="BET "+call;layout();}
-$("minus").onclick=()=>{Sound.unlock();setCall(call-1);Sound.click();};$("plus").onclick=()=>{Sound.unlock();setCall(call+1);Sound.click();};
+/* +/- : tap = 1, hold = speeds up */
+[["minus",-1],["plus",1]].forEach(([id,d])=>{const b=$(id);let t=null,n=0;const stop=()=>{clearTimeout(t);t=null;};
+  const go=()=>{n++;setCall(call+d*(n>25?5:1));Sound.click();t=setTimeout(go,n<4?260:n<12?110:60);};
+  b.addEventListener("pointerdown",e=>{e.preventDefault();Sound.unlock();stop();n=0;go();});
+  ["pointerup","pointerleave","pointercancel"].forEach(x=>b.addEventListener(x,stop));
+  b.addEventListener("click",e=>{if(e.detail===0){setCall(call+d);Sound.click();}});
+  b.addEventListener("contextmenu",e=>e.preventDefault());});
+/* tap the number to type it */
+$("callNum").addEventListener("click",()=>{if($("callNum").querySelector("input"))return;const i=document.createElement("input");i.type="text";i.inputMode="numeric";i.pattern="[0-9]*";i.value=call;i.setAttribute("aria-label","Type your bet");
+  $("callNum").textContent="";$("callNum").appendChild(i);i.focus();i.select();
+  const done=()=>{const v=parseInt(i.value,10);i.remove();setCall(isNaN(v)?call:v);};
+  i.addEventListener("blur",done);i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();i.blur();}});});
 $("callRange").oninput=e=>setCall(+e.target.value);
+/* drag anywhere on the ruler (phones in-app browsers swallow native range drags) */
+(()=>{const r=$("callRange");let on=false;const at=e=>{const b=r.getBoundingClientRect();const f=Math.max(0,Math.min(1,(e.clientX-b.left)/b.width));const v=Math.round(1+f*(CATEGORY.max-1));if(v!==call){setCall(v);if(v%5===0)Sound.click();}};
+r.addEventListener("pointerdown",e=>{on=true;Sound.unlock();try{r.setPointerCapture(e.pointerId);}catch(_){}at(e);e.preventDefault();});
+r.addEventListener("pointermove",e=>{if(on){at(e);e.preventDefault();}});
+["pointerup","pointercancel","lostpointercapture"].forEach(t=>r.addEventListener(t,()=>on=false));
+r.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});})();
 $("hint").textContent=CATEGORY.hint||"";$("guess").placeholder=CATEGORY.noun.length>14?"Type an answer":`Name a${/^[aeiou]/i.test(CATEGORY.noun)?"n":""} ${CATEGORY.noun}`;
 // ---------- INTRO ----------
 (function buildExample(){const can=8,ex=[[5,"Too safe"],[8,"Spot on"],[11,"Too greedy"]];
@@ -791,7 +812,7 @@ function fitTitle(){const el=$("catTag");if(document.body.classList.contains("hi
   const lines=()=>Math.round(el.scrollHeight/(size*.88));
   while(size>min&&(el.scrollWidth>el.clientWidth+1||lines()>3)){size-=1;el.style.fontSize=size+"px";}}
 function revealTopic(fromSave){showTopic();if(!fromSave){$("catTag").classList.add("revealed");Sound.unlock();Sound.win();}
-  let rec=null;try{rec=JSON.parse(store.get(revealKey()))}catch(e){}
+  let rec=null;if(!testDay){try{rec=JSON.parse(store.get(revealKey()))}catch(e){}}
   if(!rec){rec={t:Date.now(),call};if(!testDay)store.set(revealKey(),JSON.stringify(rec));}
   const left=BET_SECS-(Date.now()-rec.t)/1000;
   if(rec.call)setCall(rec.call);
