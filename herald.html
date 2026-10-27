@@ -474,28 +474,18 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
     <div class="i-head"><div class="eyebrow">How to play</div><h2 id="introTitle">Bet big.<br><span>Back it up.</span></h2></div>
 
     <ol class="steps">
-      <li><span class="n">1</span><div><b>Reveal and bet</b><p>One topic a day, hidden until you tap reveal. Then you get <strong>30 seconds</strong> to bet how many you can name.</p></div></li>
-      <li><span class="n">2</span><div><b>Name them</b><p><strong>20 seconds per answer.</strong> The clock resets every time you land one. Wrong guesses don't reset it, so don't panic-type.</p></div></li>
-      <li><span class="n">!</span><div><b>Herald day: what counts</b><p>Once the topic is revealed, check the <strong>Counts / Doesn’t count</strong> box under it. Those are the rules, no arguments.</p></div></li>
-      <li><span class="n">3</span><div><b>Cash out</b><p>Every answer drops a bundle of cash on the table. Reach your bet line and you bank it. Fall short and you're busted.</p></div></li>
+      <li><span class="n">1</span><div><b>Bet</b><p>Reveal the secret topic. You get <strong>30 seconds</strong> to bet how many you can name.</p></div></li>
+      <li><span class="n">2</span><div><b>Name them</b><p>20 seconds per answer. The clock resets every time you get one.</p></div></li>
+      <li><span class="n">!</span><div><b>Herald day: what counts</b><p>Check the <strong>Counts / Doesn’t count</strong> box under the topic.</p></div></li>
+      <li><span class="n">3</span><div><b>Back it up</b><p>Hit your bet and you bank it. Fall short and you bust.</p></div></li>
     </ol>
 
     <div class="card">
-      <h3>The money</h3>
-      <p>Every answer in your bet is worth 150, win or lose.</p>
       <div class="pts">
-        <div><span><i class="ico cash"></i>Each answer you back up</span><strong class="good">+150</strong></div>
-        <div><span><i class="ico coin"></i>Each extra past your bet</span><strong class="good">+25</strong></div>
+        <div><span><i class="ico cash"></i>Each one in your bet</span><strong class="good">+150</strong></div>
+        <div><span><i class="ico coin"></i>Each extra after that</span><strong class="good">+25</strong></div>
         <div><span><i class="ico iou"></i>Each one you're short</span><strong class="bad">−150</strong></div>
       </div>
-      <p class="moral">Bust and you get nothing for the ones you did name. Only the misses count.</p>
-    </div>
-
-    <div class="card">
-      <h3>Bet smart</h3>
-      <p id="exLead">Say you can actually name 8.</p>
-      <div class="bets" id="bets"></div>
-      <p class="moral"><b>Bet low</b> and you leave money on the table. <b>Bet high</b> and you pay for every miss. The best score is betting exactly what you can back up.</p>
     </div>
 
     <button class="btn" id="closeHelp">LET'S PLAY</button>
@@ -666,7 +656,7 @@ r.addEventListener("pointermove",e=>{if(on){at(e);e.preventDefault();}});
 r.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});})();
 $("hint").textContent=CATEGORY.hint||"";$("guess").placeholder=CATEGORY.noun.length>14?"Type an answer":`Name a${/^[aeiou]/i.test(CATEGORY.noun)?"n":""} ${CATEGORY.noun}`;
 // ---------- INTRO ----------
-(function buildExample(){const can=8,ex=[[5,"Too safe"],[8,"Spot on"],[11,"Too greedy"]];
+(function buildExample(){if(!$("bets"))return;const can=8,ex=[[5,"Too safe"],[8,"Spot on"],[11,"Too greedy"]];
   const vals=ex.map(([b])=>score(b,can).total),max=Math.max(...vals.map(Math.abs));
   $("bets").innerHTML=ex.map(([b,lab],i)=>{const v=vals[i],w=(Math.abs(v)/max*(v>=0?70:30)).toFixed(1);
     return `<div class="bet${b===can?" best":""}"><div class="who">Bet ${b}<small>${lab}</small></div><div class="track"><i class="${v>=0?"p":"m"}" style="width:${w}%"></i></div><div class="v ${v>=0?"good":"bad"}">${sign(v)}</div></div>`;}).join("");})();
