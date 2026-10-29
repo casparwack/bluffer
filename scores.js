@@ -1,13 +1,14 @@
 // Bluffer daily leaderboard.
 // GET  /api/scores?day=3                       -> { top: [...] }
-// POST /api/scores {day,name,bet,named}       -> { ok, top, rank }
+// POST /api/scores {day,name,bet,named,rare}  -> { ok, top, rank }
+// POST /api/scores {type:"play",day,bet,named,rare,id} -> { pct, total }  (every finished game, for "better than X%")
 // Storage: Upstash Redis (free) connected through Vercel. One sorted set per day: "lb:<day>".
 
 const URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
 const LAUNCH = Date.UTC(2026, 9, 23); // day 1 = 23 Oct 2026
-const STAKE = 150, EXTRA = 25;
+const STAKE = 150, EXTRA = 25, RARE = 100;
 
 // scores added by hand (kept even if the database is empty)
 const SEED = {
@@ -26,10 +27,10 @@ async function redis(cmd) {
   return (await r.json()).result;
 }
 
-const score = (bet, named) => (named >= bet ? bet * STAKE + (named - bet) * EXTRA : -(bet - named) * STAKE);
+const score = (bet, named, rare = 0) => (named >= bet ? bet * STAKE + (named - bet) * EXTRA : -(bet - named) * STAKE) + rare * RARE;
 const today = () => Math.floor((Date.now() - LAUNCH) / 864e5) + 1;
 
-async function top(day, n = 10) {
+async function top(day, n = 3) {
   let rows = [];
   if (URL && TOKEN) {
     const raw = await redis(["ZRANGE", `lb:${day}`, 0, n - 1, "REV", "WITHSCORES"]);
@@ -61,11 +62,29 @@ module.exports = async (req, res) => {
       const day = parseInt(b.day, 10);
       const bet = parseInt(b.bet, 10);
       const named = parseInt(b.named, 10);
+      const rare = Math.max(0, parseInt(b.rare, 10) || 0);
+      // every finished game (anonymous) -> percentile
+      if (b.type === "play") {
+        const id = String(b.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+        if (!(day >= today() - 1 && day <= today() + 1)) return res.status(400).json({ error: "closed" });
+        if (!(bet >= 1 && bet <= 250 && named >= 0 && named <= 400 && rare <= Math.min(named, 6) && id.length >= 8)) return res.status(400).json({ error: "Invalid" });
+        const ipp = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "x";
+        const np = await redis(["INCR", `pl:${day}:${ipp}`]);
+        if (np === 1) await redis(["EXPIRE", `pl:${day}:${ipp}`, 172800]);
+        if (np > 60) return res.status(429).json({ error: "slow down" });
+        const pts = score(bet, named, rare);
+        await redis(["ZADD", `all:${day}`, pts, id]);
+        await redis(["EXPIRE", `all:${day}`, 60 * 60 * 24 * 120]);
+        const total = Number(await redis(["ZCARD", `all:${day}`]));
+        const lower = Number(await redis(["ZCOUNT", `all:${day}`, "-inf", `(${pts}`]));
+        const pct = total > 1 ? Math.round((lower / (total - 1)) * 100) : 100;
+        return res.status(200).json({ pct, total });
+      }
       const name = String(b.name || "").replace(/[^\p{L}\p{N} .'_-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 18);
 
       // only today's game (allowing for time zones), sensible numbers, a real name
       if (!(day >= today() - 1 && day <= today() + 1)) return res.status(400).json({ error: "That day's board is closed" });
-      if (!(bet >= 1 && bet <= 250 && named >= 0 && named <= 400)) return res.status(400).json({ error: "Invalid score" });
+      if (!(bet >= 1 && bet <= 250 && named >= 0 && named <= 400 && rare <= Math.min(named, 6))) return res.status(400).json({ error: "Invalid score" });
       if (name.length < 2) return res.status(400).json({ error: "Name needs at least 2 letters" });
       if (BLOCK.test(name)) return res.status(400).json({ error: "Pick a different name" });
 
@@ -76,8 +95,8 @@ module.exports = async (req, res) => {
       if (n === 1) await redis(["EXPIRE", `ip:${day}:${ip}`, 172800]);
       if (n > 5) return res.status(429).json({ error: "Too many submissions from this connection today" });
 
-      const pts = score(bet, named);
-      const member = JSON.stringify({ name, bet, named, t: Date.now() });
+      const pts = score(bet, named, rare);
+      const member = JSON.stringify({ name, bet, named, rare, t: Date.now() });
       await redis(["ZADD", `lb:${day}`, pts, member]);
       await redis(["EXPIRE", `lb:${day}`, 60 * 60 * 24 * 120]);
       const higher = Number(await redis(["ZCOUNT", `lb:${day}`, `(${pts}`, "+inf"])) + (SEED[day] || []).filter((r) => r.score > pts).length;
