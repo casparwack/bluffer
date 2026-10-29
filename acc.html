@@ -342,6 +342,26 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .kb .title{display:none}
 .kb .ui{padding-bottom:8px}
 @media (max-height:520px){.playing .title{display:none}.playing .ui{padding-bottom:8px}}
+
+/* ---------- desktop: two columns (stage on the left, controls on the right) ---------- */
+@media (min-width:920px) and (min-height:560px){
+  .ui{max-width:1240px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(380px,460px);grid-template-rows:auto auto minmax(0,1fr);column-gap:clamp(40px,6vw,96px);padding-left:clamp(32px,4vw,64px);padding-right:clamp(32px,4vw,64px);overflow:hidden}
+  header{grid-column:1/-1;grid-row:1;height:64px}
+  .logo{font-size:22px}
+  .title{grid-column:1;grid-row:2;margin-top:clamp(16px,4vh,48px)}
+  .cat{font-size:clamp(48px,4.6vw,80px)!important}
+  .hint{font-size:20px}
+  .arena{grid-column:1;grid-row:3;min-height:0;margin-bottom:clamp(20px,4vh,48px);--sc:1.6}
+  .floor{transform:scale(var(--sc));transform-origin:50% 100%}
+  .count{bottom:-4px}
+  .panel{grid-column:2;grid-row:2/4;align-self:center;max-height:calc(var(--app-h,100vh) - 110px);overflow-y:auto;overflow-x:hidden;padding:10px 4px 20px;scrollbar-width:thin}
+  .results .arena{height:auto;flex:none;grid-row:3}
+  .results .title{margin-top:clamp(16px,4vh,48px)}
+  .results .cat{font-size:clamp(36px,3.2vw,56px)!important}
+  .results .panel{align-self:start;max-height:calc(var(--app-h,100vh) - 90px);margin-top:8px}
+  .reveal-copy{font-size:20px}
+  .count{font-size:34px}
+}
 @media (max-height:720px){.title{margin-top:20px}.cat{font-size:32px}.callrow{height:64px}.num{font-size:34px}.panel{gap:11px}.btn{height:52px}.i-head h2{font-size:34px}}
 @media (max-height:620px){.title{margin-top:10px}.cat{font-size:26px}.stakes{display:none}}
 button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
@@ -647,7 +667,7 @@ for(let i=0;i<18;i++){const m=document.createElement("div");m.className="mote";
 const arena=document.querySelector(".arena"), stackEl=$("stack"), coinsEl=$("coins"), ghostEl=$("ghost");
 let call=10, named=[], seen=new Set(), mode="reveal", rejected=[];
 const REPORT_EMAIL="casparwack@gmail.com"; // where "report a missing answer" emails go
-function room(){return Math.max(40,arena.clientHeight-95);} // leave space for the bill face + counter
+function room(){const sc=parseFloat(getComputedStyle(arena).getPropertyValue("--sc"))||1;return Math.max(40,(arena.clientHeight-95*sc)/sc);} // leave space for the bill face + counter
 function layout(){const step=room()/Math.max(call,1);let t,g;
   if(step>=3){t=Math.min(16,Math.floor(step)-1);g=1;}else{t=step*.7;g=step*.3;} /* big bets: thinner slabs so the bet line always fits on screen */
   document.documentElement.style.setProperty("--t",t+"px");document.documentElement.style.setProperty("--g",g+"px");ghostEl.style.height=(call*(t+g))+"px";
