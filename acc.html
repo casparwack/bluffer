@@ -196,6 +196,12 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .list{display:flex;flex-wrap:wrap;gap:6px;max-height:64px;overflow-y:auto}
 .tag{font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:99px;box-shadow:inset 0 0 0 1.5px var(--ink);animation:in .25s var(--ease)}
 .tag.x{background:var(--gold)}
+.tag.rare{background:linear-gradient(135deg,#f6dd8a,#e8b23a 55%,#f3cf6b);color:#121611;box-shadow:inset 0 0 0 1.5px #121611,0 0 0 3px rgba(232,178,58,.35)}
+.ico.gem{width:26px;height:auto;font-style:normal;font-size:15px;line-height:1;text-align:center;background:none;box-shadow:none}
+.pct{margin:0;padding:12px 16px;border-radius:14px;background:var(--ink);color:var(--field);font:600 15px/1.3 var(--sans);text-align:center}.pct b{font-weight:900;font-size:18px}
+.pastcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border:2px solid var(--ink);border-radius:18px;background:transparent;color:var(--ink);font:800 16px/1.2 var(--sans);text-align:left;cursor:pointer}
+.pastcta small{display:block;margin-top:3px;font-weight:500;font-size:12.5px;opacity:.7}.pastcta b{font-size:20px}.pastcta:active{transform:scale(.99)}
+.pastpill{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:99px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);font:800 12.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
 @keyframes in{from{opacity:0;transform:translateY(6px)}}
 
 /* ---------- results ---------- */
@@ -423,7 +429,7 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
     <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>30 seconds to place your bet</b>, then the clock starts.</p>
     <div class="chal" id="chal" hidden></div>
     <button class="btn" id="revealBtn">REVEAL TOPIC</button>
-    <div class="pastrow" id="pastRow" hidden><button class="linkbtn" id="pastBtn2">Play a past day</button><button class="linkbtn" id="todayBtn" hidden>← Back to today</button></div>
+    <div class="pastrow" id="pastRow" hidden><button class="pastpill" id="pastBtn2">📅 Play a past day</button><button class="pastpill" id="todayBtn" hidden>← Back to today</button></div>
   </section>
 
   <section class="panel" id="callScreen" hidden>
@@ -462,9 +468,11 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
       <div class="cs-foot"><span class="cs-verdict" id="verdict">Called it</span><span class="cs-pts" id="total">+1,500</span></div>
       <a class="cs-link" href="https://bluffer.lol" target="_blank" rel="noopener">bluffer.lol ↗</a>
     </div>
+    <p class="pct" id="pctLine" hidden></p>
     <ul class="rows" id="rows"></ul>
     <p class="chal-res" id="chalRes" hidden></p>
     <div class="btns"><button class="btn" id="shareBtn">SHARE</button><button class="btn sec" id="copyBtn">COPY</button></div>
+    <button class="pastcta" id="pastBtn" hidden><span>📅 Play past days<small>Practice any day you missed. Unranked.</small></span><b>→</b></button>
     <div class="lb" id="lb">
       <div class="lb-head"><span class="eyebrow">Today's top 3</span><span class="lb-you" id="lbYou"></span></div>
       <form class="lb-form" id="lbForm" autocomplete="off">
@@ -474,13 +482,14 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
       <div class="lb-msg" id="lbMsg"></div>
       <ol class="lb-list" id="lbList"></ol>
     </div>
-    <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><span class="res-links"><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button><button class="linkbtn" id="pastBtn" hidden>Past days</button></span></div>
+    <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><span class="res-links"><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button></span></div>
     <div class="stats" id="stats">
       <div class="stat"><b id="stPlayed">0</b><small>Played</small></div>
       <div class="stat"><b id="stWin">0%</b><small>Backed up</small></div>
       <div class="stat"><b id="stStreak">0</b><small>Streak</small></div>
       <div class="stat"><b id="stBest">0</b><small>Best</small></div>
     </div>
+    <div class="missed mine" id="mineBox" hidden><div class="eyebrow" id="mineHead">Your answers</div><div class="list" id="mineList"></div></div>
     <div class="missed" id="missedBox"><div class="eyebrow">Some you missed</div><div class="list" id="missed"></div></div>
     <a class="report" id="reportLink" href="#" target="_blank" rel="noopener">Missing an answer? Report it</a>
     <a class="credit" href="https://www.instagram.com/caspar_wackrow/" target="_blank" rel="noopener">Game made by @caspar_wackrow</a>
@@ -509,6 +518,7 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
         <div><span><i class="ico cash"></i>Each one in your bet</span><strong class="good">+150</strong></div>
         <div><span><i class="ico coin"></i>Each extra after that</span><strong class="good">+25</strong></div>
         <div><span><i class="ico iou"></i>Each one you're short</span><strong class="bad">−150</strong></div>
+        <div><span><i class="ico gem">💎</i>Each rare answer, always</span><strong class="good">+100</strong></div>
       </div>
     </div>
 
@@ -528,8 +538,8 @@ let testDay=(location.hash.match(/^#day(\d+)$/)||[])[1]; // #day3 = play a past 
 const TODAY_N=Math.max(1,dayNumber()), MULTI=CATEGORIES.length>1;
 {const pv=(location.hash.match(/^#preview(\d+)$/)||[])[1];if(pv)testDay=pv;else if(testDay&&MULTI&&+testDay>TODAY_N)testDay=undefined;} /* no peeking at future topics */
 const SKIP_DAYS=[6,10]; /* days a collab took over on the main site, left out of past days */
-const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})$/);if(!m)return null;
-  const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],name:nm||"Your mate"};}catch(e){return null;}})();
+const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})(?:\.(\d{1,2}))?$/);if(!m)return null;
+  const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],rare:+(m[4]||0),name:nm||"Your mate"};}catch(e){return null;}})();
 if(CH&&!testDay&&MULTI&&CH.day<TODAY_N&&!SKIP_DAYS.includes(CH.day))testDay=String(CH.day); /* challenge on an old day opens it as practice */
 const PAST=!!testDay&&MULTI&&+testDay<TODAY_N;
 const dateOf=n=>new Date(LAUNCH.getFullYear(),LAUNCH.getMonth(),LAUNCH.getDate()+n-1);
@@ -540,6 +550,7 @@ const STOP=CATEGORY.strip?new RegExp("\\b("+CATEGORY.strip+")\\b","g"):null;
 const norm=s=>{s=s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/&/g,"and");if(STOP)s=s.replace(STOP,"");return s.replace(/[^a-z0-9]/g,"");};
 const ALIAS=new Map();
 CATEGORY.answers.forEach(line=>{const p=line.split("|");const id=norm(p[0]);p.forEach(a=>{const k=norm(a);if(k&&!ALIAS.has(k))ALIAS.set(k,{id,label:p[0]});});});
+const RARE=new Set((CATEGORY.rare||[]).map(x=>norm(x)));const isRare=l=>RARE.has(norm(l));
 // ---------- AUTOCORRECT ----------
 // Typo distance where a swapped pair of letters ("hieneken") counts as one mistake. Stops early once it's over the limit.
 function lev(a,b,max=9){const m=a.length,n=b.length;if(Math.abs(m-n)>max)return max+1;
@@ -564,9 +575,10 @@ function match(input){const k=norm(input);if(!k)return null;if(ALIAS.has(k))retu
     if(d<bestD){best=v;bestD=d;tie=false;}else if(d===bestD&&best&&v.id!==best.id)tie=true;}
   if(!best||tie)return null; // nothing close, or two different answers equally close
   return Object.assign({},best,{fixed:true});}
-function score(call,got){
-  if(got>=call){const base=call*STAKE,extra=(got-call)*EXTRA;return{base,extra,short:0,hit:true,total:base+extra};}
-  const short=(call-got)*STAKE;return{base:0,extra:0,short,hit:false,total:-short};}
+const RARE_PTS=100;
+function score(call,got,rare=0){const rb=Math.max(0,rare|0)*RARE_PTS;
+  if(got>=call){const base=call*STAKE,extra=(got-call)*EXTRA;return{base,extra,short:0,rare:rb,hit:true,total:base+extra+rb};}
+  const short=(call-got)*STAKE;return{base:0,extra:0,short,rare:rb,hit:false,total:-short+rb};}
 const fmt=n=>(n<0?"−":"")+Math.abs(n).toLocaleString("en-NZ");
 const sign=n=>(n>=0?"+":"−")+Math.abs(n).toLocaleString("en-NZ");
 const $=id=>document.getElementById(id);
@@ -739,11 +751,12 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   if(seen.has(m.id))return nope("Already got that one");
   seen.add(m.id);named.push(m.label);const n=named.length;saveLive();
   if(n>call)addCoin();else addBundle();layout();$("got").textContent=n;
-  const t=document.createElement("span");t.className="tag"+(n>call?" x":"");t.textContent=m.label;$("list").prepend(t);
+  const rare=RARE.has(m.id);const t=document.createElement("span");t.className="tag"+(n>call?" x":"")+(rare?" rare":"");t.textContent=(rare?"💎 ":"")+m.label;$("list").prepend(t);
   const f=$("fb");
   if(n===call){f.className="fb gold";f.textContent="Bet covered. Extras drop as coins, +25 each.";ghostEl.classList.add("hit");flash();setTimeout(()=>Sound.win(),330);}
   else if(n>call){f.className="fb gold";f.textContent="+25 coin";}
   else{f.className="fb good";f.textContent=`${call-n} to go`;}
+  if(rare){f.className="fb gold";f.textContent="💎 Rare answer! +100 · "+f.textContent;flash();setTimeout(()=>Sound.win(),120);}
   if(m.fixed){f.textContent=`Auto-corrected to ${m.label}. `+f.textContent;}
   arm();}
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitGuess();}});
@@ -755,7 +768,7 @@ $("doneBtn").onclick=()=>{Sound.register();end("done");};
 // ---------- RESULT ----------
 let last=null;
 function end(why,restore){mode="end";document.body.classList.add("results");document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
-  const got=named.length,s=score(call,got);last={got,s};showChal(s);const st=$("stamp");
+  const got=named.length,rn=named.filter(isRare).length,s=score(call,got,rn);last={got,s,rn};showChal(s);sendPlay(s);const st=$("stamp");
   if(restore){st.textContent=s.hit?(got>call?"BANKED":"CALLED"):"BUSTED";st.className="stamp on"+(s.hit?" gold":"");
     $("verdict").textContent=s.hit?(got>call?"Undersold it":"Called it"):(why==="time"?"Time's up":"Busted");}
   else if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();setTimeout(()=>Sound.stamp(),120);setTimeout(()=>Sound.win(),260);$("verdict").textContent=got>call?"Undersold it":"Called it";}
@@ -774,9 +787,10 @@ function end(why,restore){mode="end";document.body.classList.add("results");docu
   const r=s.hit?[[`Backed up ${call} × 150`,s.base,"pos"]]:[];
   if(s.extra)r.push([`${got-call} coin${got-call>1?"s":""} × 25`,s.extra,"pos"]);
   if(s.short)r.push([`${call-got} short × 150`,-s.short,"neg"]);
+  if(s.rare)r.push([`💎 ${rn} rare × 100`,s.rare,"pos"]);
   $("rows").innerHTML=r.map(([a,b,c])=>`<li><span>${a}</span><span class="${c}">${sign(b)}</span></li>`).join("");
-  if(!restore&&!testDay){store.set(dayKey(),JSON.stringify({call,named,why,rejected}));recordStats(s);}
-  renderStats();renderMissed();renderReport();renderBoard();loadBoard();
+  if(!restore&&!testDay){store.set(dayKey(),JSON.stringify({call,named,why,rejected,total:s.total}));recordStats(s);}
+  renderStats();renderMine();renderMissed();renderReport();renderBoard();loadBoard();
   $("againBtn").hidden=!testDay;
   show("resultScreen");}
 
@@ -800,7 +814,7 @@ $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$(
   if(name.length<2){msg.className="lb-msg bad";msg.textContent="Type your name first";return;}
   if(!LB_API){msg.className="lb-msg bad";msg.textContent="Submitting works on bluffer.lol";return;}
   $("lbGo").disabled=true;msg.className="lb-msg";msg.textContent="Submitting…";
-  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length})});
+  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length,rare:(last&&last.rn)||0})});
     let j={};try{j=await r.json();}catch(_){throw new Error(r.status===404?"Leaderboard isn't set up yet (scores file not found)":"Leaderboard isn't responding, try again soon");}
     if(!r.ok)throw new Error(j.error||"Couldn't submit");
     store.set(subKey(),name);store.set("bluffer-name",name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
@@ -821,10 +835,13 @@ function renderStats(){const st=getStats();$("stats").hidden=!st||testDay;if(!st
   $("stPlayed").textContent=st.played;$("stWin").textContent=Math.round(st.wins/st.played*100)+"%";
   $("stStreak").textContent=streak+(streak>=3?"🔥":"");$("stBest").textContent=st.best===null?"–":fmt(st.best);}
 // a handful of well-known answers the player didn't get
+function renderMine(){const box=$("mineBox");box.hidden=!named.length;$("mineHead").textContent="Your answers · "+named.length;
+  $("mineList").innerHTML=named.map(x=>{const r=isRare(x);return `<span class="tag${r?" rare":""}">${r?"💎 ":""}${esc(x)}</span>`;}).join("");}
 function renderMissed(){const pool=[];for(const line of CATEGORY.answers.slice(0,60)){const p=line.split("|")[0];if(!seen.has(norm(p)))pool.push(p);}
   let seed=issue()*9301+49297;const rand=()=>(seed=(seed*9301+49297)%233280)/233280; // same picks all day
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}const out=pool.slice(0,8);
-  $("missedBox").hidden=!out.length;$("missed").innerHTML=out.map(x=>`<span class="tag">${x.replace(/</g,"&lt;")}</span>`).join("");}
+  const rareMissed=(CATEGORY.rare||[]).filter(x=>!seen.has(norm(x)));const all=[...rareMissed,...out.filter(x=>!isRare(x))].slice(0,10);
+  $("missedBox").hidden=!all.length;$("missed").innerHTML=all.map(x=>{const r=isRare(x);return `<span class="tag${r?" rare":""}">${r?"💎 ":""}${esc(x)}</span>`;}).join("");}
 function renderReport(){const a=$("reportLink"),list=rejected.slice(0,20);
   a.textContent=list.length?`Got a real answer rejected? Report it (${list.length})`:"Missing an answer? Report it";
   const body=`Topic: ${CATEGORY.name} (#${issue()})\n\nThese should count:\n${list.length?list.map(x=>"- "+x).join("\n"):"- "}\n`;
@@ -840,8 +857,8 @@ function shareText(c,g,s){
   const verdict=!s.hit?"🚨 Busted":g>c?"💰 Banked":"🎯 Called it";
   const pts=(s.total>=0?"+":"−")+Math.abs(s.total).toLocaleString("en-NZ");
   const nm=(store.get("bluffer-name")||"").trim();
-  const url=SHARE_BASE+"?c="+issue()+"."+c+"."+g+(nm?"&n="+encodeURIComponent(nm):"");
-  return `BLUFFER × ACC #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} · ${pts}\nBeat me 👉 ${url}`;}
+  const rn=(last&&last.rn)||0;const url=SHARE_BASE+"?c="+issue()+"."+c+"."+g+(rn?"."+rn:"")+(nm?"&n="+encodeURIComponent(nm):"");
+  return `BLUFFER × ACC #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}${(last&&last.rn)?"\n"+"💎".repeat(last.rn)+" rare":""}\n\n${verdict} · ${pts}\nBeat me 👉 ${url}`;}
 const SHARE_BASE="https://bluffer.lol/"+(MULTI?"":(location.pathname.split("/").pop()||""));
 async function copyResult(btn){const {got,s}=last;const txt=shareText(call,got,s);const label=btn.textContent;
   try{await navigator.clipboard.writeText(txt);btn.textContent="COPIED ✓";}
@@ -904,14 +921,19 @@ $("dayNo").textContent="#"+issue();$("day").textContent=(PAST?dateOf(issue()):ne
 if(PAST){document.querySelectorAll(".today").forEach(t=>t.childNodes.forEach(n=>{if(n.nodeType===3&&/Today/.test(n.textContent))n.textContent="Past day ";}));
   document.querySelectorAll(".reveal-copy").forEach(p=>p.innerHTML=p.innerHTML.replace("Today's topic","This topic"));$("againBtn").textContent="Play again";}
 /* challenge banner */
-if(CH&&CH.day===issue()){$("chal").hidden=false;$("chal").innerHTML="🎯 <b>"+esc(CH.name)+"</b> bet "+CH.bet+" and named "+CH.named+" <span>("+sign(score(CH.bet,CH.named).total)+")</span><br>Can you beat it?";}
+if(CH&&CH.day===issue()){$("chal").hidden=false;$("chal").innerHTML="🎯 <b>"+esc(CH.name)+"</b> bet "+CH.bet+" and named "+CH.named+" <span>("+sign(score(CH.bet,CH.named,CH.rare).total)+")</span><br>Can you beat it?";}
 function showChal(s){const el=$("chalRes");if(!el)return;if(!(CH&&CH.day===issue())){el.hidden=true;return;}
-  const theirs=score(CH.bet,CH.named).total,d=s.total-theirs,n=esc(CH.name);
+  const theirs=score(CH.bet,CH.named,CH.rare).total,d=s.total-theirs,n=esc(CH.name);
   el.innerHTML=d>0?"🏆 You beat <b>"+n+"</b> by "+Math.abs(d).toLocaleString("en-NZ")+". Send it back.":d<0?"😬 <b>"+n+"</b> wins by "+Math.abs(d).toLocaleString("en-NZ")+". Hit them back tomorrow.":"🤝 Dead even with <b>"+n+"</b>.";el.hidden=false;}
+async function sendPlay(s){const el=$("pctLine");if(!el)return;el.hidden=true;if(!LB_API||testDay)return;
+  let id=store.get("bluffer-id");if(!id){id=(Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,20);store.set("bluffer-id",id);}
+  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"play",day:issue(),bet:call,named:named.length,rare:(last&&last.rn)||0,id})});
+    const j=await r.json();if(!r.ok||j.pct==null)return;
+    el.innerHTML=j.total<5?"📊 You're one of the first <b>"+j.total+"</b> players today":j.pct>=100?"👑 <b>Top score</b> of "+j.total.toLocaleString("en-NZ")+" players so far":"📊 Better than <b>"+j.pct+"%</b> of players today";el.hidden=false;}catch(e){}}
 /* past days */
 if(MULTI){$("pastRow").hidden=false;$("pastBtn").hidden=false;if(PAST){$("todayBtn").hidden=false;$("pastBtn2").textContent="Pick another day";}}
 function openPast(){let h="";for(let n=TODAY_N-1;n>=1;n--){if(SKIP_DAYS.includes(n))continue;let st="Not played";
-    try{const r=JSON.parse(store.get("bluffer-day-"+n));if(r){st=sign(score(r.call,(r.named||[]).length).total);}}catch(e){}
+    try{const r=JSON.parse(store.get("bluffer-day-"+n));if(r){st=sign(r.total!=null?r.total:score(r.call,(r.named||[]).length).total);}}catch(e){}
     h+='<li><button type="button" data-n="'+n+'"><span>#'+n+' · '+dateOf(n).toLocaleDateString("en-NZ",{weekday:"short",day:"numeric",month:"short"})+'</span><small>'+st+'</small></button></li>';}
   $("pastList").innerHTML=h||'<li class="none">No past days yet. Check back tomorrow.</li>';const el=$("pastSheet");el.hidden=false;el.querySelector(".intro-card").scrollTop=0;Sound.click();}
 const closePast=()=>{$("pastSheet").hidden=true;};
