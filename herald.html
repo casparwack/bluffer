@@ -223,6 +223,15 @@ input[type=range]::-moz-range-thumb{width:16px;height:30px;border:0;border-radiu
 .pos{color:var(--ink)}.neg{color:var(--red)}
 .btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
 .res-bottom{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.res-links{display:flex;gap:16px}
+.chal{margin:0 auto 14px;max-width:340px;padding:12px 16px;border-radius:14px;background:var(--ink);color:var(--field);font:600 15px/1.35 var(--sans);text-align:center}
+.chal b{font-weight:800}.chal span{opacity:.75;font-weight:500}
+.chal-res{margin:0;padding:11px 14px;border:1.5px solid var(--ink);border-radius:12px;text-align:center;font:600 15px/1.35 var(--sans)}
+.pastrow{display:flex;justify-content:center;gap:18px;margin-top:12px}
+.past-note{margin:6px 0 0;font-size:14px;opacity:.7}
+.pastlist{list-style:none;margin:14px 0 4px;padding:0;display:flex;flex-direction:column;gap:8px}
+.pastlist button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border:1.5px solid var(--ink);border-radius:14px;background:none;color:var(--ink);font:700 15px var(--sans);cursor:pointer;text-align:left}
+.pastlist button:active{transform:scale(.99)}.pastlist small{font-weight:500;opacity:.65;white-space:nowrap}.pastlist .none{opacity:.6;font-size:14px}
 .next{font-size:13px;color:var(--ink-2)}
 .next b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
 .linkbtn{border:0;background:none;font:600 13px var(--sans);text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 0}
@@ -405,7 +414,9 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
   <section class="panel" id="revealScreen">
     <div class="champ" id="champ" hidden><span class="champ-k">Today's top bluffer</span><b id="champName">–</b><span id="champLine"></span></div>
     <p class="reveal-copy">Today's topic is hidden until you're ready. Once it's revealed you get <b>30 seconds to place your bet</b>, then the clock starts.</p>
+    <div class="chal" id="chal" hidden></div>
     <button class="btn" id="revealBtn">REVEAL TOPIC</button>
+    <div class="pastrow" id="pastRow" hidden><button class="linkbtn" id="pastBtn2">Play a past day</button><button class="linkbtn" id="todayBtn" hidden>← Back to today</button></div>
   </section>
 
   <section class="panel" id="callScreen" hidden>
@@ -446,6 +457,7 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
       <a class="cs-link" href="https://bluffer.lol" target="_blank" rel="noopener">bluffer.lol ↗</a>
     </div>
     <ul class="rows" id="rows"></ul>
+    <p class="chal-res" id="chalRes" hidden></p>
     <div class="btns"><button class="btn" id="shareBtn">SHARE</button><button class="btn sec" id="copyBtn">COPY</button></div>
     <div class="lb" id="lb">
       <div class="lb-head"><span class="eyebrow">Today's top 3</span><span class="lb-you" id="lbYou"></span></div>
@@ -456,7 +468,7 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
       <div class="lb-msg" id="lbMsg"></div>
       <ol class="lb-list" id="lbList"></ol>
     </div>
-    <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button></div>
+    <div class="res-bottom"><span class="next">Next topic in <b id="nextIn">--:--:--</b></span><span class="res-links"><button class="linkbtn" id="againBtn" hidden>Replay (test mode)</button><button class="linkbtn" id="pastBtn" hidden>Past days</button></span></div>
     <div class="stats" id="stats">
       <div class="stat"><b id="stPlayed">0</b><small>Played</small></div>
       <div class="stat"><b id="stWin">0%</b><small>Backed up</small></div>
@@ -469,6 +481,11 @@ body:not(.hidden-topic) .collab,body:not(.hidden-topic) .ribbon{display:none}
   </section>
 </div>
 
+<div class="intro" id="pastSheet" hidden role="dialog" aria-modal="true" aria-label="Past days">
+  <div class="intro-card"><button class="intro-x" id="pastX" aria-label="Close">×</button>
+  <div class="intro-in"><div class="i-head"><div class="eyebrow">Practice · unranked</div><h2>Past days</h2></div>
+  <p class="past-note">Topics stay secret until you reveal them.</p><ul class="pastlist" id="pastList"></ul></div></div>
+</div>
 <div class="intro" id="intro" hidden role="dialog" aria-modal="true" aria-labelledby="introTitle">
   <div class="intro-card"><button class="intro-x" id="introX" aria-label="Close">×</button>
   <div class="intro-in">
@@ -501,7 +518,15 @@ const CATEGORIES = [{"key":"dhbeer","name":"Well-known beer brands","noun":"beer
 // Day 1 = launch day. A new category unlocks at each player's local midnight. Loops after the last one.
 const LAUNCH=new Date(2026,9,23);
 const dayNumber=()=>Math.floor((new Date().setHours(0,0,0,0)-LAUNCH.getTime())/864e5)+1;
-const testDay=(location.hash.match(/^#day(\d+)$/)||[])[1]; // add #day3 to the URL to preview a day
+let testDay=(location.hash.match(/^#day(\d+)$/)||[])[1]; // #day3 = play a past day (practice). #preview8 = peek at a future day (for you only)
+const TODAY_N=Math.max(1,dayNumber()), MULTI=CATEGORIES.length>1;
+{const pv=(location.hash.match(/^#preview(\d+)$/)||[])[1];if(pv)testDay=pv;else if(testDay&&MULTI&&+testDay>TODAY_N)testDay=undefined;} /* no peeking at future topics */
+const SKIP_DAYS=[6,10]; /* days a collab took over on the main site, left out of past days */
+const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})$/);if(!m)return null;
+  const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],name:nm||"Your mate"};}catch(e){return null;}})();
+if(CH&&!testDay&&MULTI&&CH.day<TODAY_N&&!SKIP_DAYS.includes(CH.day))testDay=String(CH.day); /* challenge on an old day opens it as practice */
+const PAST=!!testDay&&MULTI&&+testDay<TODAY_N;
+const dateOf=n=>new Date(LAUNCH.getFullYear(),LAUNCH.getMonth(),LAUNCH.getDate()+n-1);
 const issue=()=>testDay?+testDay:10; /* Herald day = issue 10, Sun 1 Nov */
 const CATEGORY=CATEGORIES[(issue()-1)%CATEGORIES.length];
 
@@ -723,7 +748,7 @@ $("doneBtn").onclick=()=>{Sound.register();end("done");};
 // ---------- RESULT ----------
 let last=null;
 function end(why,restore){setTimeout(()=>{const g=named.length,w=n=>n<=10?["zero","one","two","three","four","five","six","seven","eight","nine","ten"][n]:n;const dl=document.getElementById("dateline");if(dl)dl.innerHTML="<b>DUNEDIN —</b> "+(g>=call?(g>call?"Local legend bets they can name "+call+" beers. Names "+w(g)+". Says it was easy.":"Local legend bets they can name "+call+" beers. Names exactly "+w(g)+". Smug about it."):"Local bluffer bets they can name "+call+" beers. Names "+w(g)+".");},0);mode="end";document.body.classList.add("results");document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
-  const got=named.length,s=score(call,got);last={got,s};const st=$("stamp");
+  const got=named.length,s=score(call,got);last={got,s};showChal(s);const st=$("stamp");
   if(restore){st.textContent=s.hit?(got>call?"BANKED":"CALLED"):"BUSTED";st.className="stamp on"+(s.hit?" gold":"");
     $("verdict").textContent=s.hit?(got>call?"Undersold it":"Called it"):(why==="time"?"Time's up":"Busted");}
   else if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();setTimeout(()=>Sound.stamp(),120);setTimeout(()=>Sound.win(),260);$("verdict").textContent=got>call?"Undersold it":"Called it";}
@@ -737,7 +762,7 @@ function end(why,restore){setTimeout(()=>{const g=named.length,w=n=>n<=10?["zero
   $("total").textContent=(s.total>=0?"+":"")+fmt(s.total);$("total").classList.toggle("neg",s.total<0);
   $("verdict").classList.toggle("neg",!s.hit);
   $("csNo").textContent="Daily #"+issue();$("csCat").innerHTML=`Bet ${call} <span>→</span> ${got}`;
-  $("csBet").textContent=new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
+  $("csBet").textContent=(PAST?dateOf(issue()):new Date()).toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
   $("csGrid").innerHTML=grid(call,got).split("\n").map(r=>`<div>${r}</div>`).join("");
   const r=s.hit?[[`Backed up ${call} × 150`,s.base,"pos"]]:[];
   if(s.extra)r.push([`${got-call} coin${got-call>1?"s":""} × 25`,s.extra,"pos"]);
@@ -763,7 +788,7 @@ const subKey=()=>"bluffer-sub-"+issue();
 function renderBoard(){const mine=store.get(subKey());
   $("lbList").innerHTML=board.length?board.slice(0,3).map(r=>`<li class="${mine&&r.name===mine?"me":""}"><span class="nm">${esc(r.name)}<small>Bet ${r.bet} → ${r.named}</small></span><span class="pt ${r.score<0?"neg":""}">${r.score<0?"−":""}${Math.abs(r.score).toLocaleString("en-NZ")}</span></li>`).join(""):'<li class="lb-empty" style="display:block">No scores yet. Be the first.</li>';
   const done=!!mine;$("lbForm").hidden=done||testDay;$("lbYou").textContent=done?"Submitted as "+mine:"";
-  if(testDay&&!done){$("lbMsg").className="lb-msg";$("lbMsg").textContent="Submitting is off in test mode.";}}
+  if(testDay&&!done){$("lbMsg").className="lb-msg";$("lbMsg").textContent=PAST?"Past days are practice, so they don't count for the leaderboard.":"Submitting is off in test mode.";}}
 $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$("lbName").value.trim();const msg=$("lbMsg");
   if(name.length<2){msg.className="lb-msg bad";msg.textContent="Type your name first";return;}
   if(!LB_API){msg.className="lb-msg bad";msg.textContent="Submitting works on bluffer.lol";return;}
@@ -771,7 +796,7 @@ $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$(
   try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length})});
     let j={};try{j=await r.json();}catch(_){throw new Error(r.status===404?"Leaderboard isn't set up yet (scores file not found)":"Leaderboard isn't responding, try again soon");}
     if(!r.ok)throw new Error(j.error||"Couldn't submit");
-    store.set(subKey(),name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
+    store.set(subKey(),name);store.set("bluffer-name",name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
     if(j.rank===1)Sound.win();else Sound.click();renderChamp();renderBoard();
   }catch(err){msg.className="lb-msg bad";msg.textContent=err.message||"Couldn't submit, try again";}
   $("lbGo").disabled=false;});
@@ -807,7 +832,10 @@ function grid(c,g){const rows=[];let line="";
 function shareText(c,g,s){
   const verdict=!s.hit?"🚨 Busted":g>c?"💰 Banked":"🎯 Called it";
   const pts=(s.total>=0?"+":"−")+Math.abs(s.total).toLocaleString("en-NZ");
-  return `BLUFFER × DUNEDIN HERALD #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} · ${pts}\nhttps://bluffer.lol`;}
+  const nm=(store.get("bluffer-name")||"").trim();
+  const url=SHARE_BASE+"?c="+issue()+"."+c+"."+g+(nm?"&n="+encodeURIComponent(nm):"");
+  return `BLUFFER × DUNEDIN HERALD #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}\n\n${verdict} · ${pts}\nBeat me 👉 ${url}`;}
+const SHARE_BASE="https://bluffer.lol/"+(MULTI?"":(location.pathname.split("/").pop()||""));
 async function copyResult(btn){const {got,s}=last;const txt=shareText(call,got,s);const label=btn.textContent;
   try{await navigator.clipboard.writeText(txt);btn.textContent="COPIED ✓";}
   catch(e){try{const ta=document.createElement("textarea");ta.value=txt;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;opacity:0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,txt.length);
@@ -865,7 +893,25 @@ setCall(10);mode="reveal";hideTopic();show("revealScreen");
 function tickNext(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let t=Math.max(0,Math.floor((m-n)/1000));
   const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),se=t%60;$("nextIn").textContent=[h,mi,se].map(x=>String(x).padStart(2,"0")).join(":");}
 tickNext();setInterval(tickNext,1000);
-$("dayNo").textContent="#"+issue();$("day").textContent=new Date().toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
+$("dayNo").textContent="#"+issue();$("day").textContent=(PAST?dateOf(issue()):new Date()).toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
+if(PAST){document.querySelectorAll(".today").forEach(t=>t.childNodes.forEach(n=>{if(n.nodeType===3&&/Today/.test(n.textContent))n.textContent="Past day ";}));
+  document.querySelectorAll(".reveal-copy").forEach(p=>p.innerHTML=p.innerHTML.replace("Today's topic","This topic"));$("againBtn").textContent="Play again";}
+/* challenge banner */
+if(CH&&CH.day===issue()){$("chal").hidden=false;$("chal").innerHTML="🎯 <b>"+esc(CH.name)+"</b> bet "+CH.bet+" and named "+CH.named+" <span>("+sign(score(CH.bet,CH.named).total)+")</span><br>Can you beat it?";}
+function showChal(s){const el=$("chalRes");if(!el)return;if(!(CH&&CH.day===issue())){el.hidden=true;return;}
+  const theirs=score(CH.bet,CH.named).total,d=s.total-theirs,n=esc(CH.name);
+  el.innerHTML=d>0?"🏆 You beat <b>"+n+"</b> by "+Math.abs(d).toLocaleString("en-NZ")+". Send it back.":d<0?"😬 <b>"+n+"</b> wins by "+Math.abs(d).toLocaleString("en-NZ")+". Hit them back tomorrow.":"🤝 Dead even with <b>"+n+"</b>.";el.hidden=false;}
+/* past days */
+if(MULTI){$("pastRow").hidden=false;$("pastBtn").hidden=false;if(PAST){$("todayBtn").hidden=false;$("pastBtn2").textContent="Pick another day";}}
+function openPast(){let h="";for(let n=TODAY_N-1;n>=1;n--){if(SKIP_DAYS.includes(n))continue;let st="Not played";
+    try{const r=JSON.parse(store.get("bluffer-day-"+n));if(r){st=sign(score(r.call,(r.named||[]).length).total);}}catch(e){}
+    h+='<li><button type="button" data-n="'+n+'"><span>#'+n+' · '+dateOf(n).toLocaleDateString("en-NZ",{weekday:"short",day:"numeric",month:"short"})+'</span><small>'+st+'</small></button></li>';}
+  $("pastList").innerHTML=h||'<li class="none">No past days yet. Check back tomorrow.</li>';const el=$("pastSheet");el.hidden=false;el.querySelector(".intro-card").scrollTop=0;Sound.click();}
+const closePast=()=>{$("pastSheet").hidden=true;};
+$("pastBtn").onclick=openPast;$("pastBtn2").onclick=openPast;$("pastX").onclick=closePast;
+$("pastSheet").addEventListener("click",e=>{if(e.target.id==="pastSheet")closePast();});
+$("pastList").onclick=e=>{const b=e.target.closest("button[data-n]");if(b)location.assign(location.pathname+"?p="+b.dataset.n+"#day"+b.dataset.n);};
+$("todayBtn").onclick=()=>location.assign(location.pathname);
 </script>
 
 </body>
