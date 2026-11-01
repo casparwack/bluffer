@@ -9,7 +9,7 @@ const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TO
 
 const LAUNCH = Date.UTC(2026, 9, 23); // day 1 = 23 Oct 2026
 const STAKE = 150, EXTRA = 25, RARE = 100; // old scoring (pages from before 2 Nov)
-const BONUS = 10, MIN_DATA = 20; // new scoring: answer points + BONUS per answer you bet, if you hit it
+const BONUS = 10, K = 10; // new scoring: answer points + BONUS per answer you bet, if you hit it
 const CATS = require("./_cats.json");
 
 // scores added by hand (kept even if the database is empty)
@@ -72,15 +72,24 @@ async function redis(cmd) {
 }
 
 const score = (bet, named, rare = 0) => (named >= bet ? bet * STAKE + (named - bet) * EXTRA : -(bet - named) * STAKE) + rare * RARE;
-// Pointless-style: an answer is worth 1-10, the fewer players who named it the more (10 minus %/10, min 1).
-// Until 20 people have played, every answer is 5 (the topic's 💎 answers 10).
-function answerPts(label, counts, plays, rareSet) {
-  if (plays < MIN_DATA) return rareSet && rareSet.has(label) ? 10 : 5;
-  const pct = ((Number(counts[label]) || 0) / plays) * 100;
-  return Math.max(1, Math.round((100 - pct) / 10));
+// Pointless-style: an answer is worth 1-10, the fewer players who named it the more.
+// Each answer starts from a guess based on its tier (common 70%, medium 30%, rare 8%) worth K pretend players,
+// then follows what real players actually named. Must match the game's ptsOf() exactly.
+const simple = (x) => String(x).toLowerCase().replace(/[^a-z0-9]/g, "");
+function priors(cat) {
+  if (cat._p) return cat._p;
+  const m = new Map(), t = cat.t, rs = new Set((cat.r || []).map(simple));
+  cat.a.forEach((l, i) => m.set(l, t ? (i < t[0] ? 0.7 : i < t[0] + t[1] ? 0.3 : 0.08) : rs.has(simple(l)) ? 0.05 : 0.3));
+  return (cat._p = m);
 }
-function newScore(bet, answers, counts, plays, rareSet) {
-  const ans = answers.reduce((a, l) => a + answerPts(l, counts, plays, rareSet), 0);
+function answerPts(label, counts, plays, cat) {
+  const pm = cat ? priors(cat) : new Map();
+  const prior = pm.has(label) ? pm.get(label) : 0.08;
+  const p = ((+counts[label] || 0) + K * prior) / ((+plays || 0) + K);
+  return Math.max(1, Math.round(10 * (1 - p)));
+}
+function newScore(bet, answers, counts, plays, cat) {
+  const ans = answers.reduce((a, l) => a + answerPts(l, counts, plays, cat), 0);
   if (answers.length >= bet) return ans + bet * BONUS;
   return ans - Math.ceil(ans / 2); // bust: keep half your answer points, never below 0
 }
@@ -187,8 +196,7 @@ module.exports = async (req, res) => {
           const counts = await getCounts(day);
           const plays = Number(await redis(["GET", `ap:${day}`])) || 0; // players who sent their answers
           if (fresh === "OK") {
-            const rareSet = new Set(Array.isArray(b.rareList) ? b.rareList.map(String).slice(0, 8) : []);
-            pts = newScore(bet, answers, counts, plays, rareSet);
+            pts = newScore(bet, answers, counts, plays, cat);
             snap = { plays, counts };
             await pipe(answers.map((l) => ["HINCRBY", `ans:${day}`, l, 1]).concat([["EXPIRE", `ans:${day}`, 60 * 60 * 24 * 120], ["INCR", `ap:${day}`], ["EXPIRE", `ap:${day}`, 60 * 60 * 24 * 120]]));
           } else {
@@ -228,7 +236,7 @@ module.exports = async (req, res) => {
         shown = lans.length;
         const lid = String(b.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
         if (lid) { const prev = await redis(["ZSCORE", `all:${day}`, lid]); if (prev != null) pts = Number(prev); }
-        if (pts == null) pts = newScore(bet, lans, await getCounts(day), Number(await redis(["GET", `ap:${day}`])) || 0, null);
+        if (pts == null) pts = newScore(bet, lans, await getCounts(day), Number(await redis(["GET", `ap:${day}`])) || 0, lcat);
       } else pts = score(bet, named, rare);
       const member = JSON.stringify({ name, bet, named: shown, rare, t: Date.now() });
       await redis(["ZADD", `lb:${day}`, pts, member]);
