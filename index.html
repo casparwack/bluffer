@@ -210,6 +210,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border:2px solid var(
 .tag.x{background:var(--gold)}
 .tag.rare{background:linear-gradient(135deg,#f6dd8a,#e8b23a 55%,#f3cf6b);color:#121611;box-shadow:inset 0 0 0 1.5px #121611,0 0 0 3px rgba(232,178,58,.35)}
 .ico.gem{width:26px;height:auto;font-style:normal;font-size:15px;line-height:1;text-align:center;background:none;box-shadow:none}
+.mine .tag i{font-style:normal;font-weight:500;opacity:.6;margin-left:5px;font-size:11.5px}
+.crowd{display:flex;flex-direction:column;gap:9px}
+.crowd-flex{margin:0;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,#f6dd8a,#e8b23a 55%,#f3cf6b);color:#121611;font:600 15px/1.35 var(--sans);text-align:center}.crowd-flex b{font-weight:900}
+.crowd-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px}
+.crowd-list li{position:relative;display:flex;justify-content:space-between;gap:10px;padding:7px 11px;border-radius:9px;overflow:hidden;font:600 13.5px/1.2 var(--sans);box-shadow:inset 0 0 0 1.5px var(--rule)}
+.crowd-list li::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--ink);opacity:.1}
+.crowd-list li.got{box-shadow:inset 0 0 0 1.5px var(--ink)}.crowd-list li.got::before{opacity:.22}
+.crowd-list li span,.crowd-list li b{position:relative}.crowd-list li b{font-weight:800;font-variant-numeric:tabular-nums}
 .pct{margin:0;padding:12px 16px;border-radius:14px;background:var(--ink);color:var(--field);font:600 15px/1.3 var(--sans);text-align:center}.pct b{font-weight:900;font-size:18px}
 .pastcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border:2px solid var(--ink);border-radius:18px;background:transparent;color:var(--ink);font:800 16px/1.2 var(--sans);text-align:left;cursor:pointer}
 .pastcta small{display:block;margin-top:3px;font-weight:500;font-size:12.5px;opacity:.7}.pastcta b{font-size:20px}.pastcta:active{transform:scale(.99)}
@@ -430,8 +438,8 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
     <input type="range" id="callRange" min="1" max="60" value="10" aria-label="Your call">
     <div class="stakes">
-      <div class="stake w"><div class="eyebrow">Back it up</div><strong id="winPts">+1,500</strong></div>
-      <div class="stake l"><div class="eyebrow">Per miss</div><strong id="losePts">−150</strong></div>
+      <div class="stake w"><div class="eyebrow">Hit bonus</div><strong id="winPts">+1,000</strong></div>
+      <div class="stake l"><div class="eyebrow">Bust</div><strong id="losePts">Lose ½</strong></div>
     </div>
     <button class="btn" id="startBtn">BET 10</button>
   </section>
@@ -479,6 +487,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
       <div class="stat"><b id="stBest">0</b><small>Best</small></div>
     </div>
     <div class="missed mine" id="mineBox" hidden><div class="eyebrow" id="mineHead">Your answers</div><div class="list" id="mineList"></div></div>
+    <div class="crowd" id="crowdBox" hidden><div class="eyebrow" id="crowdHead">What everyone said</div><p class="crowd-flex" id="crowdFlex" hidden></p><ol class="crowd-list" id="crowdList"></ol></div>
     <div class="missed" id="missedBox"><div class="eyebrow">Some you missed</div><div class="list" id="missed"></div></div>
     <a class="report" id="reportLink" href="#" target="_blank" rel="noopener">Missing an answer? Report it</a>
     <a class="credit" href="https://www.instagram.com/caspar_wackrow/" target="_blank" rel="noopener">Game made by @caspar_wackrow</a>
@@ -498,15 +507,14 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     <ol class="steps">
       <li><span class="n">1</span><div><b>Bet</b><p>Reveal the topic. Bet how many you can name.</p></div></li>
       <li><span class="n">2</span><div><b>Name them</b><p>20s per answer. Resets when you get one.</p></div></li>
-      <li><span class="n">3</span><div><b>Back it up</b><p>Hit your bet to bank it. Fall short, you bust.</p></div></li>
+      <li><span class="n">3</span><div><b>Back it up</b><p>Hit your bet for a bonus. Bust and you lose half.</p></div></li>
     </ol>
 
     <div class="card">
       <div class="pts">
-        <div><span><i class="ico cash"></i>Each one in your bet</span><strong class="good">+150</strong></div>
-        <div><span><i class="ico coin"></i>Each extra after that</span><strong class="good">+25</strong></div>
-        <div><span><i class="ico iou"></i>Each one you're short</span><strong class="bad">−150</strong></div>
-        <div><span><i class="ico gem">💎</i>Each rare answer, always</span><strong class="good">+100</strong></div>
+        <div><span><i class="ico gem">💎</i>Each answer. Rarer = more</span><strong class="good" style="white-space:nowrap">10–100</strong></div>
+        <div><span><i class="ico cash"></i>Hit your bet, per answer bet</span><strong class="good">+100</strong></div>
+        <div><span><i class="ico iou"></i>Bust: lose half</span><strong class="bad">½</strong></div>
       </div>
     </div>
 
@@ -526,8 +534,8 @@ let testDay=(location.hash.match(/^#day(\d+)$/)||[])[1]; // #day3 = play a past 
 const TODAY_N=Math.max(1,dayNumber()), MULTI=CATEGORIES.length>1;
 {const pv=(location.hash.match(/^#preview(\d+)$/)||[])[1];if(pv)testDay=pv;else if(testDay&&MULTI&&+testDay>TODAY_N)testDay=undefined;} /* no peeking at future topics */
 const SKIP_DAYS=[6,10]; /* days a collab took over on the main site, left out of past days */
-const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})(?:\.(\d{1,2}))?$/);if(!m)return null;
-  const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],rare:+(m[4]||0),name:nm||"Your mate"};}catch(e){return null;}})();
+const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})(?:\.(\d{1,2}))?(?:\.s(\d{1,6}))?$/);if(!m)return null;
+  const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],rare:+(m[4]||0),score:m[5]!=null?+m[5]:null,name:nm||"Your mate"};}catch(e){return null;}})();
 if(CH&&!testDay&&MULTI&&CH.day<TODAY_N&&!SKIP_DAYS.includes(CH.day))testDay=String(CH.day); /* challenge on an old day opens it as practice */
 const PAST=!!testDay&&MULTI&&+testDay<TODAY_N;
 const dateOf=n=>new Date(LAUNCH.getFullYear(),LAUNCH.getMonth(),LAUNCH.getDate()+n-1);
@@ -562,10 +570,22 @@ function match(input){const k=norm(input);if(!k)return null;if(ALIAS.has(k))retu
     if(d<bestD){best=v;bestD=d;tie=false;}else if(d===bestD&&best&&v.id!==best.id)tie=true;}
   if(!best||tie)return null; // nothing close, or two different answers equally close
   return Object.assign({},best,{fixed:true});}
-const RARE_PTS=100;
-function score(call,got,rare=0){const rb=Math.max(0,rare|0)*RARE_PTS;
-  if(got>=call){const base=call*STAKE,extra=(got-call)*EXTRA;return{base,extra,short:0,rare:rb,hit:true,total:base+extra+rb};}
-  const short=(call-got)*STAKE;return{base:0,extra:0,short,rare:rb,hit:false,total:-short+rb};}
+// ---------- SCORING ----------
+// Pointless-style: each answer is worth 100 minus the % of today's players who named it (min 10).
+// Until 20 people have played, every answer is 50 and the topic's 💎 answers are 100.
+// Hit your bet: +100 for every answer you bet. Bust: lose half your answer points. Never below 0.
+const BONUS=100,MIN_DATA=20;
+let STATS={plays:0,counts:{}};      // today's numbers, used for scoring (from before you played)
+let CROWD=null;                     // same, with you added, for the "what everyone said" panel
+const hasData=()=>STATS.plays>=MIN_DATA;
+const ptsOf=l=>hasData()?Math.max(10,100-Math.round((STATS.counts[l]||0)/STATS.plays*100)):(isRare(l)?100:50);
+const pctOf=l=>{const c=CROWD||STATS;return c.plays?Math.round((c.counts[l]||0)/c.plays*100):0;};
+const gem=l=>hasData()?pctOf(l)<=5:isRare(l);
+function score(call,list){list=Array.isArray(list)?list:[];const ans=list.reduce((a,l)=>a+ptsOf(l),0);
+  if(list.length>=call){const bonus=call*BONUS;return{ans,bonus,lost:0,hit:true,total:ans+bonus};}
+  const lost=Math.ceil(ans/2);return{ans,bonus:0,lost,hit:false,total:ans-lost};}
+const oldScore=(c,g,r=0)=>(g>=c?c*STAKE+(g-c)*EXTRA:-(c-g)*STAKE)+(r|0)*100; // challenge links made before the change
+const rareLabels=()=>(CATEGORY.rare||[]).map(r=>(ALIAS.get(norm(r))||{label:r}).label);
 const fmt=n=>(n<0?"−":"")+Math.abs(n).toLocaleString("en-NZ");
 const sign=n=>(n>=0?"+":"−")+Math.abs(n).toLocaleString("en-NZ");
 const $=id=>document.getElementById(id);
@@ -664,8 +684,7 @@ function clearStack(){stackEl.innerHTML="";coinsEl.innerHTML="";}
 $("callRange").max=CATEGORY.max;
 function setCall(v){call=Math.max(1,Math.min(CATEGORY.max,v));if(mode==="call"&&!testDay){try{const r=JSON.parse(store.get(revealKey()));if(r){r.call=call;store.set(revealKey(),JSON.stringify(r));}}catch(e){}}$("callNum").textContent=call;$("callRange").value=call;$("callRange").style.setProperty("--p",((call-1)/(CATEGORY.max-1)*100)+"%");
   $("ghostLbl").textContent="BET "+call;
-  $("winPts").textContent=sign(score(call,call).total);
-  $("losePts").textContent=sign(-STAKE);
+  $("winPts").textContent=sign(call*BONUS);
   $("startBtn").textContent="BET "+call;layout();}
 /* +/- : tap = 1, hold = speeds up */
 [["minus",-1],["plus",1]].forEach(([id,d])=>{const b=$(id);let t=null,n=0;const stop=()=>{clearTimeout(t);t=null;};
@@ -689,7 +708,7 @@ r.addEventListener("touchmove",e=>e.preventDefault(),{passive:false});})();
 $("hint").textContent=CATEGORY.hint||"";$("guess").placeholder=CATEGORY.noun.length>14?"Type an answer":`Name a${/^[aeiou]/i.test(CATEGORY.noun)?"n":""} ${CATEGORY.noun}`;
 // ---------- INTRO ----------
 (function buildExample(){if(!$("bets"))return;const can=8,ex=[[5,"Too safe"],[8,"Spot on"],[11,"Too greedy"]];
-  const vals=ex.map(([b])=>score(b,can).total),max=Math.max(...vals.map(Math.abs));
+  const vals=ex.map(([b])=>score(b,Array.from({length:can},(_,i)=>"ex"+i)).total),max=Math.max(...vals.map(Math.abs));
   $("bets").innerHTML=ex.map(([b,lab],i)=>{const v=vals[i],w=(Math.abs(v)/max*(v>=0?70:30)).toFixed(1);
     return `<div class="bet${b===can?" best":""}"><div class="who">Bet ${b}<small>${lab}</small></div><div class="track"><i class="${v>=0?"p":"m"}" style="width:${w}%"></i></div><div class="v ${v>=0?"good":"bad"}">${sign(v)}</div></div>`;}).join("");})();
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -738,12 +757,12 @@ async function submitGuess(){const v=$("guess").value.trim();$("guess").focus();
   if(seen.has(m.id))return nope("Already got that one");
   seen.add(m.id);named.push(m.label);const n=named.length;saveLive();
   if(n>call)addCoin();else addBundle();layout();$("got").textContent=n;
-  const rare=RARE.has(m.id);const t=document.createElement("span");t.className="tag"+(n>call?" x":"")+(rare?" rare":"");t.textContent=(rare?"💎 ":"")+m.label;$("list").prepend(t);
+  const rare=gem(m.label),pts=ptsOf(m.label);const t=document.createElement("span");t.className="tag"+(n>call?" x":"")+(rare?" rare":"");t.textContent=(rare?"💎 ":"")+m.label;$("list").prepend(t);
   const f=$("fb");
-  if(n===call){f.className="fb gold";f.textContent="Bet covered. Extras drop as coins, +25 each.";ghostEl.classList.add("hit");flash();setTimeout(()=>Sound.win(),330);}
-  else if(n>call){f.className="fb gold";f.textContent="+25 coin";}
-  else{f.className="fb good";f.textContent=`${call-n} to go`;}
-  if(rare){f.className="fb gold";f.textContent="💎 Rare answer! +100 · "+f.textContent;flash();setTimeout(()=>Sound.win(),120);}
+  if(n===call){f.className="fb gold";f.textContent=`+${pts} · Bet covered. Extras still score.`;ghostEl.classList.add("hit");flash();setTimeout(()=>Sound.win(),330);}
+  else if(n>call){f.className="fb gold";f.textContent=`+${pts} extra`;}
+  else{f.className="fb good";f.textContent=`+${pts} · ${call-n} to go`;}
+  if(rare){f.className="fb gold";f.textContent=(hasData()?(pctOf(m.label)<1?"💎 Nobody else has that one! ":`💎 Only ${pctOf(m.label)}% got that! `):"💎 Rare one! ")+f.textContent;flash();setTimeout(()=>Sound.win(),120);}
   if(m.fixed){f.textContent=`Auto-corrected to ${m.label}. `+f.textContent;}
   arm();}
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submitGuess();}});
@@ -755,31 +774,39 @@ $("doneBtn").onclick=()=>{Sound.register();end("done");};
 // ---------- RESULT ----------
 let last=null;
 function end(why,restore){mode="end";document.body.classList.add("results");document.body.classList.remove("playing");$("guess").blur();cancelAnimationFrame(raf);$("timer").hidden=true;scene.classList.remove("low");$("count").hidden=true;
-  const got=named.length,rn=named.filter(isRare).length,s=score(call,got,rn);last={got,s,rn};showChal(s);sendPlay(s);const st=$("stamp");
+  const got=named.length,s=score(call,named);last={got,s};showChal(s);sendPlay(s);const st=$("stamp");const short=call-got;
   if(restore){st.textContent=s.hit?(got>call?"BANKED":"CALLED"):"BUSTED";st.className="stamp on"+(s.hit?" gold":"");
-    $("verdict").textContent=s.hit?(got>call?"Undersold it":"Called it"):(why==="time"?"Time's up":"Busted");}
+    $("verdict").textContent=s.hit?(got>call?"Undersold it":"Called it"):(why==="time"?`Time's up · ${short} short`:`${short} short`);}
   else if(s.hit){st.textContent=got>call?"BANKED":"CALLED";st.className="stamp gold on";flash();setTimeout(()=>Sound.stamp(),120);setTimeout(()=>Sound.win(),260);$("verdict").textContent=got>call?"Undersold it":"Called it";}
-  else{st.textContent="BUSTED";st.className="stamp on";$("verdict").textContent=why==="time"?"Time's up":"Busted";
+  else{st.textContent="BUSTED";st.className="stamp on";$("verdict").textContent=why==="time"?`Time's up · ${short} short`:`So close · ${short} short`;
     st.className="stamp";
     // missing answers stack up as red IOUs, then the whole pile gets swept
     const miss=call-got,gap=Math.min(70,700/Math.max(miss,1));const top=stackEl.lastElementChild;if(top)top.classList.add("covered");
     for(let i=0;i<miss;i++)setTimeout(()=>{const d=document.createElement("div");d.className="debt";stackEl.appendChild(d);},i*gap);
     setTimeout(()=>{st.className="stamp on";Sound.stamp();Sound.bust();
       [...stackEl.children,...coinsEl.children].forEach((b,i)=>{b.style.setProperty("--fx",rnd(-260,260).toFixed(0)+"px");b.style.setProperty("--fr",rnd(-200,200).toFixed(0)+"deg");b.style.animationDelay=(i*20)+"ms";b.classList.add("fly");});},miss*gap+450);}
-  $("total").textContent=(s.total>=0?"+":"")+fmt(s.total);$("total").classList.toggle("neg",s.total<0);
   $("verdict").classList.toggle("neg",!s.hit);
   $("csNo").textContent="Daily #"+issue();$("csCat").innerHTML=`Bet ${call} <span>→</span> ${got}`;
   $("csBet").textContent=(PAST?dateOf(issue()):new Date()).toLocaleDateString("en-NZ",{weekday:"long",day:"numeric",month:"long"});
   $("csGrid").innerHTML=grid(call,got).split("\n").map(r=>`<div>${r}</div>`).join("");
-  const r=s.hit?[[`Backed up ${call} × 150`,s.base,"pos"]]:[];
-  if(s.extra)r.push([`${got-call} coin${got-call>1?"s":""} × 25`,s.extra,"pos"]);
-  if(s.short)r.push([`${call-got} short × 150`,-s.short,"neg"]);
-  if(s.rare)r.push([`💎 ${rn} rare × 100`,s.rare,"pos"]);
-  $("rows").innerHTML=r.map(([a,b,c])=>`<li><span>${a}</span><span class="${c}">${sign(b)}</span></li>`).join("");
+  renderScore(s);
   if(!restore&&!testDay){store.set(dayKey(),JSON.stringify({call,named,why,rejected,total:s.total}));recordStats(s);}
-  renderStats();renderMine();renderMissed();renderReport();renderBoard();loadBoard();
+  renderStats();renderMine();renderMissed();renderCrowd();renderReport();renderBoard();loadBoard();
   $("againBtn").hidden=!testDay;
   show("resultScreen");}
+
+function renderScore(s){const got=named.length;
+  $("total").textContent=(s.total>0?"+":"")+fmt(s.total);$("total").classList.remove("neg");
+  const r=[[`${got} answer${got===1?"":"s"}`,s.ans,"pos"]];
+  if(s.hit)r.push([`Bet bonus · ${call} × ${BONUS}`,s.bonus,"pos"]);
+  else r.push([`Bust · ${call-got} short, lose half`,-s.lost,"neg"]);
+  $("rows").innerHTML=r.map(([a,b,c])=>`<li><span>${a}</span><span class="${c}">${sign(b)}</span></li>`).join("");}
+// once the server says how today's numbers stood when you finished, use those (so your score matches the leaderboard)
+function rescore(snap){if(!snap||!last)return;STATS={plays:+snap.plays||0,counts:snap.counts||{}};
+  const s=score(call,named);last.s=s;renderScore(s);showChal(s);
+  if(!testDay){try{const r=JSON.parse(store.get(dayKey()));if(r){r.total=s.total;r.snap=STATS;store.set(dayKey(),JSON.stringify(r));}}catch(e){}
+    try{const st=getStats();if(st&&st.lastDay===issue()){st.best=Math.max(st.best===null?s.total:st.best,s.total);store.set("bluffer-stats",JSON.stringify(st));renderStats();}}catch(e){}}}
+function withMe(base){const c=Object.assign({},base.counts||{});named.forEach(l=>c[l]=(c[l]||0)+1);return{plays:(+base.plays||0)+1,counts:c};}
 
 // ---------- LEADERBOARD ----------
 // Live on bluffer.lol through /api/scores. Anywhere else (like a preview) it shows the seeded scores only.
@@ -788,7 +815,10 @@ const LB_SEED={3:[{name:"Andrew Gough",bet:30,named:33,score:4575}]};
 let board=[];
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 async function loadBoard(){let list=null;
-  if(LB_API){try{const r=await fetch(LB_API+"?day="+issue(),{cache:"no-store"});if(r.ok&&(r.headers.get("content-type")||"").includes("json"))list=(await r.json()).top;}catch(e){}}
+  if(LB_API){try{const r=await fetch(LB_API+"?stats=1&day="+issue(),{cache:"no-store"});if(r.ok&&(r.headers.get("content-type")||"").includes("json")){const j=await r.json();list=j.top;
+      const live={plays:+j.plays||0,counts:j.counts||{}};
+      if(mode!=="end")STATS=live;
+      else if(!CROWD&&live.plays){CROWD=live;renderCrowd();renderMine();renderMissed();}}}catch(e){}}
   board=list||(LB_SEED[issue()]||[]);renderChamp();renderBoard();}
 function renderChamp(){const c=board[0];$("champ").hidden=!c;if(!c)return;
   $("champName").innerHTML=`${esc(c.name)}<small>Bet ${c.bet}, named ${c.named}. Beat it.</small>`;$("champLine").textContent=fmt(c.score);}
@@ -801,7 +831,7 @@ $("lbForm").addEventListener("submit",async e=>{e.preventDefault();const name=$(
   if(name.length<2){msg.className="lb-msg bad";msg.textContent="Type your name first";return;}
   if(!LB_API){msg.className="lb-msg bad";msg.textContent="Submitting works on bluffer.lol";return;}
   $("lbGo").disabled=true;msg.className="lb-msg";msg.textContent="Submitting…";
-  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length,rare:(last&&last.rn)||0})});
+  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({day:issue(),name,bet:call,named:named.length,rare:0,cat:CATEGORY.key,answers:named,id:store.get("bluffer-id")||""})});
     let j={};try{j=await r.json();}catch(_){throw new Error(r.status===404?"Leaderboard isn't set up yet (scores file not found)":"Leaderboard isn't responding, try again soon");}
     if(!r.ok)throw new Error(j.error||"Couldn't submit");
     store.set(subKey(),name);store.set("bluffer-name",name);board=j.top||board;msg.className="lb-msg";msg.textContent=j.rank===1?"You're top of the board. 👑":`You're #${j.rank} today.`;
@@ -823,8 +853,18 @@ function renderStats(){const st=getStats();$("stats").hidden=!st||testDay;if(!st
   $("stStreak").textContent=streak+(streak>=3?"🔥":"");$("stBest").textContent=st.best===null?"–":fmt(st.best);}
 // a handful of well-known answers the player didn't get
 function renderMine(){const box=$("mineBox");box.hidden=!named.length;$("mineHead").textContent="Your answers · "+named.length;
-  $("mineList").innerHTML=named.map(x=>{const r=isRare(x);return `<span class="tag${r?" rare":""}">${r?"💎 ":""}${esc(x)}</span>`;}).join("");}
-function renderMissed(){const pool=[];for(const line of CATEGORY.answers.slice(0,60)){const p=line.split("|")[0];if(!seen.has(norm(p)))pool.push(p);}
+  const show=!!CROWD&&CROWD.plays>=5;const list=show?named.slice().sort((a,b)=>pctOf(a)-pctOf(b)):named;
+  $("mineList").innerHTML=list.map(x=>{const r=gem(x);return `<span class="tag${r?" rare":""}">${r?"💎 ":""}${esc(x)}${show?`<i>${pctOf(x)}%</i>`:""}</span>`;}).join("");}
+function renderCrowd(){const box=$("crowdBox");const c=CROWD;if(!c||c.plays<5){box.hidden=true;return;}box.hidden=false;
+  $("crowdHead").textContent=`What everyone said · ${c.plays.toLocaleString("en-NZ")} players`;
+  const top=Object.entries(c.counts).sort((a,b)=>b[1]-a[1]).slice(0,8);const mine=new Set(named);
+  $("crowdList").innerHTML=top.map(([l,n])=>{const p=Math.round(n/c.plays*100);return `<li class="${mine.has(l)?"got":""}" style="--w:${p}%"><span>${mine.has(l)?"✓ ":""}${esc(l)}</span><b>${p}%</b></li>`;}).join("");
+  const fx=$("crowdFlex");const best=named.slice().sort((a,b)=>pctOf(a)-pctOf(b))[0];
+  if(best&&pctOf(best)<=25){const p=pctOf(best);fx.innerHTML=p<=1?`Nobody else got <b>${esc(best)}</b>. Just you. 💎`:`Only <b>${p}%</b> got <b>${esc(best)}</b>. You did. 💎`;fx.hidden=false;}else fx.hidden=true;}
+function renderMissed(){
+  if(CROWD&&CROWD.plays>=5){const pop=Object.entries(CROWD.counts).filter(([l])=>!seen.has(norm(l))&&ALIAS.has(norm(l))).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([l])=>l);
+    if(pop.length){$("missedBox").hidden=false;$("missed").innerHTML=pop.map(x=>`<span class="tag">${esc(x)}<i style="font-style:normal;opacity:.6;margin-left:5px;font-size:11.5px">${pctOf(x)}%</i></span>`).join("");return;}}
+  const pool=[];for(const line of CATEGORY.answers.slice(0,60)){const p=line.split("|")[0];if(!seen.has(norm(p)))pool.push(p);}
   let seed=issue()*9301+49297;const rand=()=>(seed=(seed*9301+49297)%233280)/233280; // same picks all day
   for(let i=pool.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}const out=pool.slice(0,8);
   const rareMissed=(CATEGORY.rare||[]).filter(x=>!seen.has(norm(x)));const all=[...rareMissed,...out.filter(x=>!isRare(x))].slice(0,10);
@@ -844,8 +884,9 @@ function shareText(c,g,s){
   const verdict=!s.hit?"🚨 Busted":g>c?"💰 Banked":"🎯 Called it";
   const pts=(s.total>=0?"+":"−")+Math.abs(s.total).toLocaleString("en-NZ");
   const nm=(store.get("bluffer-name")||"").trim();
-  const rn=(last&&last.rn)||0;const url=SHARE_BASE+"?c="+issue()+"."+c+"."+g+(rn?"."+rn:"")+(nm?"&n="+encodeURIComponent(nm):"");
-  return `BLUFFER #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}${(last&&last.rn)?"\n"+"💎".repeat(last.rn)+" rare":""}\n\n${verdict} · ${pts}\nBeat me 👉 ${url}`;}
+  const url=SHARE_BASE+"?c="+issue()+"."+c+"."+g+".s"+Math.max(0,s.total)+(nm?"&n="+encodeURIComponent(nm):"");
+  const best=named.slice().sort((a,b)=>pctOf(a)-pctOf(b))[0];const flex=CROWD&&CROWD.plays>=5&&best&&pctOf(best)<=25?`\n💎 Only ${pctOf(best)}% got ${best}`:"";
+  return `BLUFFER #${issue()}\nBet ${c} → named ${g}\n\n${grid(c,g)}${flex}\n\n${verdict} · ${pts}\nBeat me 👉 ${url}`;}
 const SHARE_BASE="https://bluffer.lol/"+(MULTI?"":(location.pathname.split("/").pop()||""));
 async function copyResult(btn){const {got,s}=last;const txt=shareText(call,got,s);const label=btn.textContent;
   try{await navigator.clipboard.writeText(txt);btn.textContent="COPIED ✓";}
@@ -900,7 +941,7 @@ setCall(10);mode="reveal";hideTopic();show("revealScreen");
   if(store.get(revealKey())){$("intro").hidden=true;revealTopic(true);}})();
 (function restoreToday(){if(testDay)return;let rec=null;try{rec=JSON.parse(store.get(dayKey()))}catch(e){}
   if(!rec||!rec.named)return;showTopic();setCall(rec.call);named=rec.named;rejected=rec.rejected||[];seen=new Set(named.map(norm));
-  document.body.classList.add("results");$("intro").hidden=true;end(rec.why,true);})();
+  if(rec.snap)STATS=rec.snap;document.body.classList.add("results");$("intro").hidden=true;end(rec.why,true);})();
 function tickNext(){const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);let t=Math.max(0,Math.floor((m-n)/1000));
   const h=Math.floor(t/3600),mi=Math.floor(t%3600/60),se=t%60;$("nextIn").textContent=[h,mi,se].map(x=>String(x).padStart(2,"0")).join(":");}
 tickNext();setInterval(tickNext,1000);
@@ -908,19 +949,20 @@ $("dayNo").textContent="#"+issue();$("day").textContent=(PAST?dateOf(issue()):ne
 if(PAST){document.querySelectorAll(".today").forEach(t=>t.childNodes.forEach(n=>{if(n.nodeType===3&&/Today/.test(n.textContent))n.textContent="Past day ";}));
   document.querySelectorAll(".reveal-copy").forEach(p=>p.innerHTML=p.innerHTML.replace("Today's topic","This topic"));$("againBtn").textContent="Play again";}
 /* challenge banner */
-if(CH&&CH.day===issue()){$("chal").hidden=false;$("chal").innerHTML="🎯 <b>"+esc(CH.name)+"</b> bet "+CH.bet+" and named "+CH.named+" <span>("+sign(score(CH.bet,CH.named,CH.rare).total)+")</span><br>Can you beat it?";}
+if(CH&&CH.day===issue()){$("chal").hidden=false;$("chal").innerHTML="🎯 <b>"+esc(CH.name)+"</b> bet "+CH.bet+" and named "+CH.named+" <span>("+sign(CH.score!=null?CH.score:oldScore(CH.bet,CH.named,CH.rare))+")</span><br>Can you beat it?";}
 function showChal(s){const el=$("chalRes");if(!el)return;if(!(CH&&CH.day===issue())){el.hidden=true;return;}
-  const theirs=score(CH.bet,CH.named,CH.rare).total,d=s.total-theirs,n=esc(CH.name);
+  const theirs=CH.score!=null?CH.score:oldScore(CH.bet,CH.named,CH.rare),d=s.total-theirs,n=esc(CH.name);
   el.innerHTML=d>0?"🏆 You beat <b>"+n+"</b> by "+Math.abs(d).toLocaleString("en-NZ")+". Send it back.":d<0?"😬 <b>"+n+"</b> wins by "+Math.abs(d).toLocaleString("en-NZ")+". Hit them back tomorrow.":"🤝 Dead even with <b>"+n+"</b>.";el.hidden=false;}
-async function sendPlay(s){const el=$("pctLine");if(!el)return;el.hidden=true;if(!LB_API||testDay)return;
+async function sendPlay(s){const el=$("pctLine");if(!el)return;el.hidden=true;if(!LB_API||testDay){CROWD=STATS.plays?STATS:null;return;}
   let id=store.get("bluffer-id");if(!id){id=(Math.random().toString(36).slice(2)+Date.now().toString(36)).slice(0,20);store.set("bluffer-id",id);}
-  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"play",day:issue(),bet:call,named:named.length,rare:(last&&last.rn)||0,id})});
+  try{const r=await fetch(LB_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"play",day:issue(),bet:call,named:named.length,rare:0,cat:CATEGORY.key,answers:named,rareList:rareLabels(),id})});
     const j=await r.json();if(!r.ok||j.pct==null)return;
+    if(j.snap){rescore(j.snap);CROWD=withMe(j.snap);renderCrowd();renderMine();renderMissed();}
     el.innerHTML=j.total<5?"📊 You're one of the first <b>"+j.total+"</b> players today":j.pct>=100?"👑 <b>Top score</b> of "+j.total.toLocaleString("en-NZ")+" players so far":"📊 Better than <b>"+j.pct+"%</b> of players today";el.hidden=false;}catch(e){}}
 /* past days */
 if(MULTI){$("pastRow").hidden=false;$("pastBtn").hidden=false;if(PAST){$("todayBtn").hidden=false;$("pastBtn2").textContent="Pick another day";}}
 function openPast(){let h="";for(let n=TODAY_N-1;n>=1;n--){if(SKIP_DAYS.includes(n))continue;let st="Not played";
-    try{const r=JSON.parse(store.get("bluffer-day-"+n));if(r){st=sign(r.total!=null?r.total:score(r.call,(r.named||[]).length).total);}}catch(e){}
+    try{const r=JSON.parse(store.get("bluffer-day-"+n));if(r){st=sign(r.total!=null?r.total:0);}}catch(e){}
     h+='<li><button type="button" data-n="'+n+'"><span>#'+n+' · '+dateOf(n).toLocaleDateString("en-NZ",{weekday:"short",day:"numeric",month:"short"})+'</span><small>'+st+'</small></button></li>';}
   $("pastList").innerHTML=h||'<li class="none">No past days yet. Check back tomorrow.</li>';const el=$("pastSheet");el.hidden=false;el.querySelector(".intro-card").scrollTop=0;Sound.click();}
 const closePast=()=>{$("pastSheet").hidden=true;};
