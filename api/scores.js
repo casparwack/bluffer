@@ -9,7 +9,7 @@ const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TO
 
 const LAUNCH = Date.UTC(2026, 9, 23); // day 1 = 23 Oct 2026
 const STAKE = 150, EXTRA = 25, RARE = 100; // old scoring (pages from before 2 Nov)
-const BONUS = 100, MIN_DATA = 20; // new scoring: answer points + BONUS per answer you bet, if you hit it
+const BONUS = 10, MIN_DATA = 20; // new scoring: answer points + BONUS per answer you bet, if you hit it
 const CATS = require("./_cats.json");
 
 // scores added by hand (kept even if the database is empty)
@@ -72,12 +72,12 @@ async function redis(cmd) {
 }
 
 const score = (bet, named, rare = 0) => (named >= bet ? bet * STAKE + (named - bet) * EXTRA : -(bet - named) * STAKE) + rare * RARE;
-// Pointless-style: an answer is worth 100 minus the % of players who named it (min 10).
-// Until 20 people have played, every answer is 50 (the topic's 💎 answers 100).
+// Pointless-style: an answer is worth 1-10, the fewer players who named it the more (10 minus %/10, min 1).
+// Until 20 people have played, every answer is 5 (the topic's 💎 answers 10).
 function answerPts(label, counts, plays, rareSet) {
-  if (plays < MIN_DATA) return rareSet && rareSet.has(label) ? 100 : 50;
-  const pct = Math.round(((Number(counts[label]) || 0) / plays) * 100);
-  return Math.max(10, 100 - pct);
+  if (plays < MIN_DATA) return rareSet && rareSet.has(label) ? 10 : 5;
+  const pct = ((Number(counts[label]) || 0) / plays) * 100;
+  return Math.max(1, Math.round((100 - pct) / 10));
 }
 function newScore(bet, answers, counts, plays, rareSet) {
   const ans = answers.reduce((a, l) => a + answerPts(l, counts, plays, rareSet), 0);
