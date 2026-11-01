@@ -438,7 +438,7 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
     </div>
     <input type="range" id="callRange" min="1" max="60" value="10" aria-label="Your call">
     <div class="stakes">
-      <div class="stake w"><div class="eyebrow">Hit bonus</div><strong id="winPts">+1,000</strong></div>
+      <div class="stake w"><div class="eyebrow">Hit bonus</div><strong id="winPts">+100</strong></div>
       <div class="stake l"><div class="eyebrow">Bust</div><strong id="losePts">Lose ½</strong></div>
     </div>
     <button class="btn" id="startBtn">BET 10</button>
@@ -512,8 +512,8 @@ button:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--ink
 
     <div class="card">
       <div class="pts">
-        <div><span><i class="ico gem">💎</i>Each answer. Rarer = more</span><strong class="good" style="white-space:nowrap">10–100</strong></div>
-        <div><span><i class="ico cash"></i>Hit your bet, per answer bet</span><strong class="good">+100</strong></div>
+        <div><span><i class="ico gem">💎</i>Each answer. Rarer = more</span><strong class="good" style="white-space:nowrap">1–10</strong></div>
+        <div><span><i class="ico cash"></i>Hit your bet, per answer bet</span><strong class="good">+10</strong></div>
         <div><span><i class="ico iou"></i>Bust: lose half</span><strong class="bad">½</strong></div>
       </div>
     </div>
@@ -571,14 +571,14 @@ function match(input){const k=norm(input);if(!k)return null;if(ALIAS.has(k))retu
   if(!best||tie)return null; // nothing close, or two different answers equally close
   return Object.assign({},best,{fixed:true});}
 // ---------- SCORING ----------
-// Pointless-style: each answer is worth 100 minus the % of today's players who named it (min 10).
-// Until 20 people have played, every answer is 50 and the topic's 💎 answers are 100.
-// Hit your bet: +100 for every answer you bet. Bust: lose half your answer points. Never below 0.
-const BONUS=100,MIN_DATA=20;
+// Pointless-style: each answer is worth 1-10, the fewer of today's players who named it the more (10 minus %/10, min 1).
+// Until 20 people have played, every answer is 5 and the topic's 💎 answers are 10.
+// Hit your bet: +10 for every answer you bet. Bust: lose half your answer points. Never below 0.
+const BONUS=10,MIN_DATA=20;
 let STATS={plays:0,counts:{}};      // today's numbers, used for scoring (from before you played)
 let CROWD=null;                     // same, with you added, for the "what everyone said" panel
 const hasData=()=>STATS.plays>=MIN_DATA;
-const ptsOf=l=>hasData()?Math.max(10,100-Math.round((STATS.counts[l]||0)/STATS.plays*100)):(isRare(l)?100:50);
+const ptsOf=l=>hasData()?Math.max(1,Math.round((100-(STATS.counts[l]||0)/STATS.plays*100)/10)):(isRare(l)?10:5);
 const pctOf=l=>{const c=CROWD||STATS;return c.plays?Math.round((c.counts[l]||0)/c.plays*100):0;};
 const gem=l=>hasData()?pctOf(l)<=5:isRare(l);
 function score(call,list){list=Array.isArray(list)?list:[];const ans=list.reduce((a,l)=>a+ptsOf(l),0);
