@@ -25,7 +25,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://bluffer.lol/og.png">
 <script defer src="/_vercel/insights/script.js"></script>
-<script>/* special days (NZ date) */try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"Pacific/Auckland"}).format(new Date());var S={"2026-10-28":"/acc.html","2026-11-01":"/herald.html"};if(S[d]&&!/^#(day|preview)/.test(location.hash)&&!/[?&](c|p)=/.test(location.search))location.replace(S[d]);}catch(e){}</script>
+<script>/* special days (NZ date) */try{var d=new Intl.DateTimeFormat("en-CA",{timeZone:"Pacific/Auckland"}).format(new Date());var S={"2026-10-28":"/acc.html","2026-11-01":"/herald.html","2026-11-20":"/rnv.html"};if(S[d]&&!/^#(day|preview)/.test(location.hash)&&!/[?&](c|p)=/.test(location.search))location.replace(S[d]);}catch(e){}</script>
 <title>Bluffer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Newsreader:ital,opsz,wght@1,6..72,400..500&display=swap">
@@ -537,7 +537,7 @@ const dayNumber=()=>Math.floor((new Date().setHours(0,0,0,0)-LAUNCH.getTime())/8
 let testDay=(location.hash.match(/^#day(\d+)$/)||[])[1]; // #day3 = play a past day (practice). #preview8 = peek at a future day (for you only)
 const TODAY_N=Math.max(1,dayNumber()), MULTI=CATEGORIES.length>1;
 {const pv=(location.hash.match(/^#preview(\d+)$/)||[])[1];if(pv)testDay=pv;else if(testDay&&MULTI&&+testDay>TODAY_N)testDay=undefined;} /* no peeking at future topics */
-const SKIP_DAYS=[6,10]; /* days a collab took over on the main site, left out of past days */
+const SKIP_DAYS=[6,10,29]; /* days a collab took over on the main site, left out of past days */
 const CH=(()=>{try{const q=new URLSearchParams(location.search),m=(q.get("c")||"").match(/^(\d{1,4})\.(\d{1,3})\.(\d{1,4})(?:\.(\d{1,2}))?(?:\.s(\d{1,6}))?$/);if(!m)return null;
   const nm=(q.get("n")||"").replace(/[^\p{L}\p{N} .'_-]/gu,"").trim().slice(0,18);return{day:+m[1],bet:+m[2],named:+m[3],rare:+(m[4]||0),score:m[5]!=null?+m[5]:null,name:nm||"Your mate"};}catch(e){return null;}})();
 if(CH&&!testDay&&MULTI&&CH.day<TODAY_N&&!SKIP_DAYS.includes(CH.day))testDay=String(CH.day); /* challenge on an old day opens it as practice */
