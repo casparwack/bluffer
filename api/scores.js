@@ -29,12 +29,12 @@ const BAD_PART = ("fuck fuk fck phuk phuck fuq shit sht cunt kunt nigg niga nigr
   "nipple genital labia pubic pube hentai onlyfans milf dilf gilf bdsm fetish bondage stripper hooker prostitut " +
   "killyourself kys suicid selfharm cutyourself isis jihad terroris taliban alqaeda kkk klan whitepower siegheil 1488 " +
   "cocksuck dicksuck dickhead dickface cockhead knobhead fuckhead shithead motherf mofo wanker tosser minge fanny " +
-  "pissflap pisshead cumbubble ballbag nobhead smegma pussi poonani punani bendover hughjass hughjazz mikehunt mikeoxlong mikeoxmall ligma sugma deeznut imahoe").split(" ");
+  "pissflap pisshead cumbubble ballbag nobhead smegma pussi poonani punani suck sux rnv rhythmandvines rhythmvines herald stinks blows loser bendover hughjass hughjazz mikehunt mikeoxlong mikeoxmall ligma sugma deeznut imahoe").split(" ");
 // Bad only as a whole word (these show up inside real names: Hancock, Dickson, Cassidy, Scunthorpe...)
 const BAD_WORD = new Set(("dick dicks cock cocks cum cums ass arse arses tit tits anal anus sex sexy sexx homo fag fags gay gays dyke poof poofter " +
   "spic spik paki pakis negro hoe hoes thot slag shag shagger prick pricks knob nob nobs muff gash poo poop piss crap turd fart farts " +
   "rape raped raping rapist nut nuts balls bum bums butt butts pedo kill die tard spaz spastic mong cripple jap japs nig wog wogs abo boong " +
-  "loser idiot moron stupid dumb dumbass hore 69 420 666 admin bluffer moderator").split(" "));
+  "loser idiot moron stupid dumb dumbass hore 69 420 666 admin bluffer moderator trash garbage rubbish worst hate hates hater haters lame boring scam rigged fake shite crap acc dh official").split(" "));
 const LEET = { "0": "o", "1": "i", "!": "i", "|": "i", "3": "e", "4": "a", "@": "a", "5": "s", "$": "s", "7": "t", "8": "b", "9": "g", "2": "z", "6": "g" };
 const LOOK = { "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x", "і": "i", "ј": "j", "к": "k", "м": "m", "н": "h", "т": "t", "в": "b", "ѕ": "s", "ԁ": "d", "ɡ": "g", "п": "n", "ґ": "r" };
 function variants(name) {
